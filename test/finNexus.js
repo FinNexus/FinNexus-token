@@ -126,7 +126,7 @@ contract('', async ([owner]) => {
                                               PHASE1_StartTime,
                                               PHASE1_EndTime,
                                               PHASE1_Wan2CfuncRate,{from:owner});
-      console.log(ret)
+      //console.log(ret)
 
       let gotPhase1 =  await FinNexusContributionInstance.CURRENT_PHASE();
       let gotStartTime =  await FinNexusContributionInstance.startTime();
@@ -134,8 +134,8 @@ contract('', async ([owner]) => {
       let gotWAN_CFUNC_RATE =  await FinNexusContributionInstance.WAN_CFUNC_RATE();
 
       assert.equal(gotPhase1,PHASE1);
-      assert.equal(gotStartTime,PHASE1_StartTime);
-      assert.equal(gotEndTime,PHASE1_EndTime);
+      assert.equal(gotStartTime,parseInt(PHASE1_StartTime));
+      assert.equal(gotEndTime,parseInt(PHASE1_EndTime));
       assert.equal(gotWAN_CFUNC_RATE,PHASE1_Wan2CfuncRate);
 
       let gotMAX_OPEN_SOLD =  await FinNexusContributionInstance.MAX_OPEN_SOLD();
@@ -145,7 +145,7 @@ contract('', async ([owner]) => {
       console.log(colors.green('gotMAX_EXCHANGE_MINT: ',gotMAX_EXCHANGE_MINT));
 
       ret = await CFuncTokenInstance.init(PHASE1,PHASE1_ConTokenStartTime,PHASE1_ConTokenEndTime,PHASE1_CFunc2AbtRatio);
-      console(ret)
+      console.log(ret)
 
       let gotConStartTime =  await CFuncTokenInstance.conStartTime();
       let gotConEndTime =  await CFuncTokenInstance.conEndTime();
