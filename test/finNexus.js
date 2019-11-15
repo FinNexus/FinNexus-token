@@ -113,10 +113,10 @@ contract('', async ([owner]) => {
 
     try {
 
-      await FinNexusContributionInstance.initAddress(WALLET_ADDRESS,CFuncTokenInstanceAddress,{from:owner});
+      let ret = await FinNexusContributionInstance.initAddress(WALLET_ADDRESS,CFuncTokenInstanceAddress,{from:owner});
 
-      let gotWalletAddress = FinNexusContributionInstance.walletAddress();
-      let tokenAddress = FinNexusContributionInstance.cfuncTokenAddress();
+      let gotWalletAddress = await FinNexusContributionInstance.walletAddress();
+      let tokenAddress =  await FinNexusContributionInstance.cfuncTokenAddress();
 
       console.log(colors.green('gotWalletAddress: ',gotWalletAddress));
       console.log(colors.green('tokenAddress: ',tokenAddress));
@@ -124,33 +124,33 @@ contract('', async ([owner]) => {
       assert.equal(gotWalletAddress,WALLET_ADDRESS)
       assert.equal(tokenAddress,CFuncTokenInstanceAddress);
 
-      await FinNexusContributionInstance.init(PHASE1,
+      ret = await FinNexusContributionInstance.init(PHASE1,
                                               PHASE1_WanRatioOfSold,
                                               PHASE1_StartTime,
                                               PHASE1_EndTime,
                                               PHASE1_Wan2CfuncRate,{from:owner});
 
-      let gotPhase1 = FinNexusContributionInstance.CURRENT_PHASE();
-      let gotStartTime = FinNexusContributionInstance.startTime();
-      let gotEndTime = FinNexusContributionInstance.endTime();
-      let gotWAN_CFUNC_RATE = FinNexusContributionInstance.WAN_CFUNC_RATE();
+      let gotPhase1 =  await FinNexusContributionInstance.CURRENT_PHASE();
+      let gotStartTime =  await FinNexusContributionInstance.startTime();
+      let gotEndTime =  await FinNexusContributionInstance.endTime();
+      let gotWAN_CFUNC_RATE =  await FinNexusContributionInstance.WAN_CFUNC_RATE();
 
       assert.equal(gotPhase1,PHASE1);
       assert.equal(gotStartTime,PHASE1_StartTime);
       assert.equal(gotEndTime,PHASE1_EndTime);
       assert.equal(gotWAN_CFUNC_RATE,PHASE1_Wan2CfuncRate);
 
-      let gotMAX_OPEN_SOLD = FinNexusContributionInstance.MAX_OPEN_SOLD();
-      let gotMAX_EXCHANGE_MINT = FinNexusContributionInstance.MAX_EXCHANGE_MINT();
+      let gotMAX_OPEN_SOLD =  await FinNexusContributionInstance.MAX_OPEN_SOLD();
+      let gotMAX_EXCHANGE_MINT =  await FinNexusContributionInstance.MAX_EXCHANGE_MINT();
 
       console.log(colors.green('gotMAX_OPEN_SOLD: ',gotMAX_OPEN_SOLD));
       console.log(colors.green('gotMAX_EXCHANGE_MINT: ',gotMAX_EXCHANGE_MINT));
 
-      let ret = await CFuncTokenInstance.init(PHASE1,PHASE1_ConTokenStartTime,PHASE1_ConTokenEndTime,PHASE1_CFunc2AbtRatio);
+      ret = await CFuncTokenInstance.init(PHASE1,PHASE1_ConTokenStartTime,PHASE1_ConTokenEndTime,PHASE1_CFunc2AbtRatio);
 
-      let gotConStartTime = CFuncTokenInstance.conStartTime();
-      let gotConEndTime = CFuncTokenInstance.conEndTime();
-      let gotConRatio = CFuncTokenInstance.conRatio();
+      let gotConStartTime =  await CFuncTokenInstance.conStartTime();
+      let gotConEndTime =  await CFuncTokenInstance.conEndTime();
+      let gotConRatio =  await CFuncTokenInstance.conRatio();
 
       assert.equal(gotConStartTime,PHASE1_ConTokenStartTime);
       assert.equal(gotConEndTime,PHASE1_ConTokenEndTime);
