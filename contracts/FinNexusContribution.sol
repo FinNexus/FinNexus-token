@@ -20,28 +20,33 @@ pragma solidity ^0.4.24;
 
 import "./SafeMath.sol";
 import "./Owned.sol";
-import "./CFuncToken.sol";
-
 
 /// @title FinNexus Contribution Contract
 /// ICO Rules according: https://www.FinNexus.org/crowdsale
 /// For more information about this token sale, please visit https://FinNexus.org
+
+contract CFuncTokenInterface {
+    function mintToken(address _receipent, uint _amount) external;
+    function mintExchangeQuota(address _receipent, uint _amount) external;
+    function burnExchangeQuota() external;
+    function conEndTime()  public view returns(uint);
+}
 
 contract FinNexusContribution is Owned {
 
     using SafeMath for uint;
 
     /// Constant fields
-    
+
     /// FinNexus total tokens supply
     uint public constant CFUNC_TOTAL_SUPPLY = 500000000 ether;
 
     /// ----------------------------------------------------------------------------------------------------
     /// |                                                  |                    |                 |          |
     /// |        PUBLIC SALE (PRESALE + OPEN SALE)         |      DEV TEAM      |    FOUNDATION   |  DYNAMIC |
-    /// |                       30%                        |         25%        |       30%       |   15%    |    
+    /// |                       30%                        |         25%        |       30%       |   15%    |
     /// ----------------------------------------------------------------------------------------------------
-    uint public constant OPEN_SALE_STAKE = 300;  
+    uint public constant OPEN_SALE_STAKE = 300;
 
     uint public constant FIRST_OPEN_SALE_AMOUNT = 800000000 ether;
     uint public constant SECOND_OPEN_SALE_AMOUNT = 700000000 ether;
@@ -54,54 +59,40 @@ contract FinNexusContribution is Owned {
     uint public constant DIVISOR = 1000;
 
     /// Exchange rates for WAN
-    uint public WAN_CFUNC_RATE;  
+    uint public WAN_CFUNC_RATE ;
 
     /// Addresses of Patrons
-    address public DEV_TEAM_HOLDER;
-    address public FOUNDATION_HOLDER;
-    address public DYNAMIC_HOLDER;
-	
+    address public constant DEV_TEAM_HOLDER = 0xf851b2edae9d24876ed7645062331622e4f18a05;
+    address public constant FOUNDATION_HOLDER = 0x8ce3708fdbe05a75135e5923e8acc36d22d18033;
+    address public constant DYNAMIC_HOLDER = 0x414810cd259e89a63c6fb10326cfa00952fb4785;
+
+        ///All deposited wan will be instantly forwarded to this address.
+    address public walletAddress;
+
 	///the pahse for Contribution is divied into 2 phase
     uint public CURRENT_PHASE = 1;
 
-    ///max quota for open sale 
+    ///max quota for open sale
     uint public MAX_OPEN_SOLD;
-    
+
     ///max quota for exhange
     uint public MAX_EXCHANGE_MINT;
-    
-    ///All deposited wan will be instantly forwarded to this address.
-    address public walletAddress;
-
-    ///first phase Contribution start time
-    uint public firstStartTime;
-    ///first phase Contribution end time
-    uint public firstEndTime;
-
-    ///second phase Contribution start time
-    uint public secondStartTime;
-    ///second phase Contribution end time
-    uint public secondEndTime;   
 
     ///contribution start time
     uint public startTime;
     ///contribution end time
-    uint public endTime;     
-
-    ///accumulator for open sold tokens in first phase
-    uint public firstOpenSoldTokens;
-    ///accumulator for sold tokens in exchange in first phase
-    uint public firstMintExchangeTokens;    
+    uint public endTime;
 
     ///accumulator for open sold tokens in current phase
     uint public openSoldTokens;
     ///accumulator for sold tokens in exchange in current phase
     uint public mintExchangeTokens;
-    
+
     /// Due to an emergency, set this to true to halt the contribution
-    bool public halted; 
+    bool public halted;
+
     /// ERC20 compilant FinNexus token contact instance
-    CFuncToken public cfuncToken; 
+    address public cfuncTokenAddress;
 
     ///the indicator for initialized status
     bool public isInitialized = false;
@@ -109,8 +100,10 @@ contract FinNexusContribution is Owned {
     /*
      * EVENTS
      */
+
+    event FirstPhaseTime(uint indexed startTime,uint indexed endTime);
+    event SecondPhaseTime(uint indexed startTime,uint indexed endTime);
     event NewSale(address indexed destAddress, uint indexed ethCost, uint indexed gotTokens);
-    
     event MintExchangeQuota(address indexed exchangeAddr, uint indexed amount);
 
     /*
@@ -129,7 +122,7 @@ contract FinNexusContribution is Owned {
     modifier initialized() {
         require(isInitialized);
         _;
-    }    
+    }
 
     modifier notEarlierThan(uint x) {
         require(now >= x);
@@ -144,7 +137,7 @@ contract FinNexusContribution is Owned {
     modifier ceilingNotReached() {
         require(openSoldTokens < MAX_OPEN_SOLD);
         _;
-    }  
+    }
 
     modifier isSaleEnded() {
         require(now > endTime || openSoldTokens >= MAX_OPEN_SOLD);
@@ -153,145 +146,128 @@ contract FinNexusContribution is Owned {
 
 
     /**
-     * CONSTRUCTOR 
-     * 
+     * CONSTRUCTOR
+     *
      * @dev Initialize the FinNexus contribution contract
-     * @param _walletAddr The escrow account address, all ethers will be sent to this address.
-     * @param _devAddr dev team holder address
-     * @param _foundationAddr   foundation holder address
-     * @param _dynaAddr dynamic holder address
      */
-    function FinNexusContribution(address _walletAddr,address _devAddr,address _foundationAddr,address _dynaAddr){
+    function FinNexusContribution(){
 
-        require(walletAddress != 0x0);
-        require(_foundationAddr != 0x0);
-        require(_devAddr != 0x0);
-        require(_dynaAddr != 0x0);
+    }
 
-        DEV_TEAM_HOLDER = _devAddr;
-        FOUNDATION_HOLDER = _foundationAddr;
-        DYNAMIC_HOLDER = _dynaAddr;
-       
-        walletAddress = _walletAddr;
+    /**
+     * public function
+     *
+     * @dev change wallet address for recieving wan
+     * @param _walletAddress the address for recieving cfunc tokens
+     * @param _cfuncTokenAddress the address for cfunc token
+     *
+     */
+    function initAddress(address _walletAddress,address _cfuncTokenAddress)
+        public
+        onlyOwner
+    {
+        require(_walletAddress != 0x0);
+        require(_cfuncTokenAddress != 0x0);
 
-        halted = false;
-        /// Create FinNexus token contract instance
-    	cfuncToken = new CFuncToken(this);
-
-        /// Reserve tokens according FinNexus ICO rules
-    	uint stakeMultiplier = CFUNC_TOTAL_SUPPLY.div(DIVISOR);
-		/// mint tokens for dirrent holder
-        cfuncToken.mintToken(DEV_TEAM_HOLDER, DEV_TEAM_STAKE.mul(stakeMultiplier));
-        cfuncToken.mintToken(FOUNDATION_HOLDER, FOUNDATION_STAKE.mul(stakeMultiplier));	
-        cfuncToken.mintToken(DYNAMIC_HOLDER, DYNAMIC_STAKE.mul(stakeMultiplier));
+        walletAddress = _walletAddress;
+        cfuncTokenAddress = _cfuncTokenAddress;
     }
 
 
     /**
-     * public function 
-     * 
+     * public function
+     *
      * @dev Initialize the FinNexus contribution contract
-     * @param _phase    init the different phase 
+     * @param _phase    init the different phase
      * @param _wanRatioOfSold   the ratio for open sale in different phase
-     * @param _startTime    start time for open sale 
+     * @param _startTime    start time for open sale
      * @param _endTime  end time for open sale
-     * @param _conTokenStartTime    convert start time for Cfunc token
-     * @param _conTokenEndTime  convert end time for cfunc token
      * @param _Wan2CfuncRate the change rate from wan to cfunc
      * @param _CFunc2AbtRatio the allowed ratio for change from cfunc to abt
-     * 
+     *
      */
     function init(  uint _phase,
                     uint _wanRatioOfSold,
-                    uint _startTime, 
-                    uint _endTime, 
-                    uint _conTokenStartTime, 
-                    uint _conTokenEndTime,
+                    uint _startTime,
+                    uint _endTime,
                     uint _Wan2CfuncRate,
                     uint _CFunc2AbtRatio)
-        public        
+        public
         onlyOwner
-    {    
+    {
+        require(cfuncTokenAddress != 0x0 );
         require(_startTime > 0);
         require(_endTime > _startTime);
-        require(_conTokenStartTime > _endTime);
-        require(_conTokenEndTime > _conTokenStartTime);
         require(_Wan2CfuncRate > 0);
         require(_CFunc2AbtRatio > 0);
-        
-        if (_phase == 1) {
-            if (firstStartTime > 0) {
-                require(now < firstStartTime);
-            }
 
-            firstStartTime = _startTime;
-            firstEndTime = _endTime;
-            MAX_OPEN_SOLD = FIRST_OPEN_SALE_AMOUNT.mul(_wanRatioOfSold).div(DIVISOR); 
-            MAX_EXCHANGE_MINT = FIRST_OPEN_SALE_AMOUNT.sub(MAX_OPEN_SOLD);  
-
-        } else {
-            
-            require(_phase == 2);
-            require(firstStartTime > 0);
-            require(_startTime > firstEndTime);
-    
-            if (secondStartTime > 0) {
-                require(now < secondStartTime);
-            }
-
-            secondStartTime = _startTime;
-            secondEndTime = _endTime;
-            MAX_OPEN_SOLD = SECOND_OPEN_SALE_AMOUNT.mul(_wanRatioOfSold).div(DIVISOR);
-            MAX_EXCHANGE_MINT = SECOND_OPEN_SALE_AMOUNT.sub(MAX_OPEN_SOLD);
-
-            //keep the first phase data
-            firstOpenSoldTokens = openSoldTokens;
-            firstMintExchangeTokens = mintExchangeTokens; 
-
-            //initialize variable in the first phase
-            mintExchangeTokens = 0;
-            openSoldTokens = 0;
-            
-            CURRENT_PHASE = 2;
-        }
-        
         startTime = _startTime;
         endTime = _endTime;
         WAN_CFUNC_RATE =  _Wan2CfuncRate;
 
-        cfuncToken.init(_phase,_conTokenStartTime, _conTokenEndTime,_CFunc2AbtRatio);
+        if (_phase == 1) {
+            /// Reserve tokens according FinNexus ICO rules
+        	uint stakeMultiplier = CFUNC_TOTAL_SUPPLY.div(DIVISOR);
+    		/// mint tokens for dirrent holder
+            CFuncTokenInterface(cfuncTokenAddress).mintToken(DEV_TEAM_HOLDER, DEV_TEAM_STAKE.mul(stakeMultiplier));
+            CFuncTokenInterface(cfuncTokenAddress).mintToken(FOUNDATION_HOLDER, FOUNDATION_STAKE.mul(stakeMultiplier));
+            CFuncTokenInterface(cfuncTokenAddress).mintToken(DYNAMIC_HOLDER, DYNAMIC_STAKE.mul(stakeMultiplier));
+
+            MAX_OPEN_SOLD = FIRST_OPEN_SALE_AMOUNT.mul(_wanRatioOfSold).div(DIVISOR);
+            MAX_EXCHANGE_MINT = FIRST_OPEN_SALE_AMOUNT.sub(MAX_OPEN_SOLD);
+
+            emit FirstPhaseTime(_startTime,_endTime);
+
+        } else {
+
+            require(_phase == 2);
+            require(_startTime > CFuncTokenInterface(cfuncTokenAddress).conEndTime());
+
+            MAX_OPEN_SOLD = SECOND_OPEN_SALE_AMOUNT.mul(_wanRatioOfSold).div(DIVISOR);
+            MAX_EXCHANGE_MINT = SECOND_OPEN_SALE_AMOUNT.sub(MAX_OPEN_SOLD);
+
+            //initialize variable in the first phase
+            mintExchangeTokens = 0;
+            openSoldTokens = 0;
+
+            CURRENT_PHASE = 2;
+
+            emit SecondPhaseTime(_startTime,_endTime);
+        }
 
         isInitialized = true;
-    } 
-    
+    }
+
     /**
-     * public function 
-     * 
+     * public function
+     *
      * @dev minting cfunc tokens for exchange
      * @param _exchangeAddr the exchange address for recieving tokens
      * @param _amount the token amount for exchange
-     * 
+     *
      */
+
     function mintExchangeToken(address _exchangeAddr, uint _amount)
-        public 
+        public
         notHalted
-        initialized       
+        initialized
         onlyWallet
     {
         uint availToken = MAX_EXCHANGE_MINT.sub(mintExchangeTokens);
         if (availToken >= _amount) {
             mintExchangeTokens = mintExchangeTokens.add(_amount);
-            cfuncToken.mintExchangeQuota(_exchangeAddr, _amount);
+            CFuncTokenInterface(cfuncTokenAddress).mintExchangeQuota(_exchangeAddr, _amount);
             emit MintExchangeQuota(_exchangeAddr,_amount);
         } else {
-            cfuncToken.mintExchangeQuota(_exchangeAddr,availToken);
+            CFuncTokenInterface(cfuncTokenAddress).mintExchangeQuota(_exchangeAddr,availToken);
             emit MintExchangeQuota(_exchangeAddr,availToken);
         }
     }
 
+
     /**
-     * Fallback function 
-     * 
+     * Fallback function
+     *
      * @dev If anybody sends Ether directly to this  contract, consider he is getting wan token
      */
     function () public payable {
@@ -299,17 +275,17 @@ contract FinNexusContribution is Owned {
     }
 
     /**
-     * public function 
-     * 
+     * public function
+     *
      * @dev minting cfunc tokens for exchange
      * @param _receipient the address for recieving cfunc tokens
-     * 
+     *
      */
-    function buyCFuncCoin(address _receipient) 
-        public 
-        payable 
-        notHalted         
-        ceilingNotReached 
+    function buyCFuncCoin(address _receipient)
+        public
+        payable
+        notHalted
+        ceilingNotReached
         initialized
         notEarlierThan(startTime)
         earlierThan(endTime)
@@ -324,51 +300,38 @@ contract FinNexusContribution is Owned {
     }
 
     /**
-     * public function 
+     * public function
      * @dev Emergency situation that requires contribution period to stop,Contributing not possible anymore.
-     */ 
+     */
+
     function halt() public onlyWallet{
         halted = true;
     }
 
     /**
-     * public function 
+     * public function
      * @dev Emergency situation resolved, Contributing becomes possible again withing the outlined restrictions.
-     */ 
+     */
+
     function unHalt() public onlyWallet{
         halted = false;
     }
 
     /**
-     * public function 
-     * 
-     * @dev change wallet address for recieving wan
-     * @param _newAddress the address for recieving cfunc tokens
-     * 
-     */    
-    function changeWalletAddress(address _newAddress)
-        public 
-        onlyWallet
-    { 
-        require(walletAddress != 0x0);
-        walletAddress = _newAddress; 
-    }
-    
-    /**
-     * public function 
-     * 
+     * public function
+     *
      * @dev burn minted exchange quota
-     * 
-     */    
+     *
+     */
     function burnExchangeQuota()
-        public 
+        public
         onlyWallet
-    { 
-        cfuncToken.burnExchangeQuota();
-    }    
+    {
+        CFuncTokenInterface(cfuncTokenAddress).burnExchangeQuota();
+    }
 
     //////////////// internal function ////////////////////////////
-    
+
     /// @dev Buy FinNexus token normally
     function buyNormal(address receipient) internal {
 
@@ -388,15 +351,14 @@ contract FinNexusContribution is Owned {
         require(msg.value >= toFund); // double check
 
         if(toFund > 0) {
-            
-            cfuncToken.mintToken(receipient, tokenCollect);         
-  
+
+            CFuncTokenInterface(cfuncTokenAddress).mintToken(receipient, tokenCollect);
             openSoldTokens = openSoldTokens.add(tokenCollect);
-            
+
             //transfer wan to specified address
             walletAddress.transfer(toFund);
 
-            emit NewSale(receipient, toFund, tokenCollect);            
+            emit NewSale(receipient, toFund, tokenCollect);
         }
 
         uint toReturn = msg.value.sub(toFund);
@@ -409,7 +371,7 @@ contract FinNexusContribution is Owned {
     function costAndBuyTokens(uint availableToken) constant internal returns (uint costValue, uint getTokens){
 
     	getTokens = WAN_CFUNC_RATE.mul(msg.value).div(DIVISOR);
-      
+
     	if(availableToken >= getTokens){
     		costValue = msg.value;
     	} else {
