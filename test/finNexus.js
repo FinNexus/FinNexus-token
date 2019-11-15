@@ -38,6 +38,8 @@ const PHASE2_WanRatioOfSold = 100 //10%,  it is mul 1000
 const PHASE2_Wan2CfuncRate = 2100 //2.1,  it is mul 1000
 const PHASE2_CFunc2AbtRatio = 800 //80%,  it is mul 1000
 
+const DIVIDER = 1000
+
 
 let FinNexusContributionInstance,
     FinNexusContributionInstanceAddress,
@@ -66,7 +68,7 @@ async function setHalt(contract, state, operator) {
 contract('', async ([owner]) => {
 
   it('Deploy contracts', async () => {
-/*
+
     owner = OWNER_ADDRESS;
     // unlock accounts
     await web3.personal.unlockAccount(owner, 'wl', 99999);
@@ -92,37 +94,78 @@ contract('', async ([owner]) => {
     AbtTokenInstance = AbtToken.at(AbtTokenInstanceAddress);
 
     console.log(colors.green('[INFO] Contracts deployed success!', ''));
-*/
+
 
   })
 
 
   it('[Contract initialize] initialize contract should success', async () => {
 
-    PHASE1_StartTime = Date.now()/1000 + 10;
-    PHASE1_EndTime = PHASE1_StartTime + 20;
-    PHASE1_ConTokenStartTime = PHASE1_StartTime + 30;
-    PHASE1_ConTokenEndTime = PHASE1_StartTime + 50;
+    PHASE1_StartTime = Date.now()/1000;
+    PHASE1_EndTime = PHASE1_StartTime + 300;
+    PHASE1_ConTokenStartTime = PHASE1_StartTime + 600;
+    PHASE1_ConTokenEndTime = PHASE1_StartTime + 900;
 
-    PHASE2_StartTime = Date.now()/1000 + 10;
-    PHASE2_EndTime = PHASE1_StartTime + 20;
-    PHASE2_ConTokenStartTime = PHASE1_StartTime + 30;
-    PHASE2_ConTokenEndTime = PHASE1_StartTime + 50;
 
     console.log(colors.green('Phase1 start time: ',PHASE1_StartTime));
 
     let retError;
 
     try {
-/*
+
+      await FinNexusContributionInstance.initAddress(WALLET_ADDRESS,CFuncTokenInstanceAddress,{from:owner});
+
+      let gotWalletAddress = FinNexusContributionInstance.walletAddress();
+      let tokenAddress = FinNexusContributionInstance.cfuncTokenAddress();
+
+      console.log(colors.green('gotWalletAddress: ',gotWalletAddress));
+      console.log(colors.green('tokenAddress: ',tokenAddress));
+
+      assert.equal(gotWalletAddress,WALLET_ADDRESS)
+      assert.equal(tokenAddress,CFuncTokenInstanceAddress);
+
       await FinNexusContributionInstance.init(PHASE1,
                                               PHASE1_WanRatioOfSold,
                                               PHASE1_StartTime,
                                               PHASE1_EndTime,
-                                              PHASE1_Wan2CfuncRate,
-                                              PHASE1_CFunc2AbtRatio,{from:owner});
+                                              PHASE1_Wan2CfuncRate,{from:owner});
 
-*/
+      let gotPhase1 = FinNexusContributionInstance.CURRENT_PHASE();
+      let gotStartTime = FinNexusContributionInstance.startTime();
+      let gotEndTime = FinNexusContributionInstance.endTime();
+      let gotWAN_CFUNC_RATE = FinNexusContributionInstance.WAN_CFUNC_RATE();
+
+      assert.equal(gotPhase1,PHASE1);
+      assert.equal(gotStartTime,PHASE1_StartTime);
+      assert.equal(gotEndTime,PHASE1_EndTime);
+      assert.equal(gotWAN_CFUNC_RATE,PHASE1_Wan2CfuncRate);
+
+      let gotMAX_OPEN_SOLD = FinNexusContributionInstance.MAX_OPEN_SOLD();
+      let gotMAX_EXCHANGE_MINT = FinNexusContributionInstance.MAX_EXCHANGE_MINT();
+
+      console.log(colors.green('gotMAX_OPEN_SOLD: ',gotMAX_OPEN_SOLD));
+      console.log(colors.green('gotMAX_EXCHANGE_MINT: ',gotMAX_EXCHANGE_MINT));
+
+      let ret = await CFuncTokenInstance.init(PHASE1,PHASE1_ConTokenStartTime,PHASE1_ConTokenEndTime,PHASE1_CFunc2AbtRatio);
+
+      let gotConStartTime = CFuncTokenInstance.conStartTime();
+      let gotConEndTime = CFuncTokenInstance.conEndTime();
+      let gotConRatio = CFuncTokenInstance.conRatio();
+
+      assert.equal(gotConStartTime,PHASE1_ConTokenStartTime);
+      assert.equal(gotConEndTime,PHASE1_ConTokenEndTime);
+      assert.equal(gotConRatio,PHASE1_CFunc2AbtRatio);
+
+      assert.web3Event(ret, {
+            event: 'FirstPhaseParameters',
+            args: {
+                startTime: PHASE1_ConTokenStartTime,
+                endTime: PHASE1_ConTokenEndTime,
+                conRatio: PHASE1_CFunc2AbtRatio
+            }
+      })  ;
+
+
     } catch (e) {
       retError = e
     }

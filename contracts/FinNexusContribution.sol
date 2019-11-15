@@ -183,15 +183,14 @@ contract FinNexusContribution is Owned {
      * @param _startTime    start time for open sale
      * @param _endTime  end time for open sale
      * @param _Wan2CfuncRate the change rate from wan to cfunc
-     * @param _CFunc2AbtRatio the allowed ratio for change from cfunc to abt
      *
      */
     function init(  uint _phase,
                     uint _wanRatioOfSold,
                     uint _startTime,
                     uint _endTime,
-                    uint _Wan2CfuncRate,
-                    uint _CFunc2AbtRatio)
+                    uint _Wan2CfuncRate
+                    )
         public
         onlyOwner
     {
@@ -199,7 +198,6 @@ contract FinNexusContribution is Owned {
         require(_startTime > 0);
         require(_endTime > _startTime);
         require(_Wan2CfuncRate > 0);
-        require(_CFunc2AbtRatio > 0);
 
         startTime = _startTime;
         endTime = _endTime;
