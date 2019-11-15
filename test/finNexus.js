@@ -109,9 +109,6 @@ contract('', async ([owner]) => {
 
     console.log(colors.green('Phase1 start time: ',PHASE1_StartTime));
 
-    let retError;
-
-    try {
 
       let ret = await FinNexusContributionInstance.initAddress(WALLET_ADDRESS,CFuncTokenInstanceAddress,{from:owner});
 
@@ -129,6 +126,7 @@ contract('', async ([owner]) => {
                                               PHASE1_StartTime,
                                               PHASE1_EndTime,
                                               PHASE1_Wan2CfuncRate,{from:owner});
+      console.log(ret)
 
       let gotPhase1 =  await FinNexusContributionInstance.CURRENT_PHASE();
       let gotStartTime =  await FinNexusContributionInstance.startTime();
@@ -147,6 +145,7 @@ contract('', async ([owner]) => {
       console.log(colors.green('gotMAX_EXCHANGE_MINT: ',gotMAX_EXCHANGE_MINT));
 
       ret = await CFuncTokenInstance.init(PHASE1,PHASE1_ConTokenStartTime,PHASE1_ConTokenEndTime,PHASE1_CFunc2AbtRatio);
+      console(ret)
 
       let gotConStartTime =  await CFuncTokenInstance.conStartTime();
       let gotConEndTime =  await CFuncTokenInstance.conEndTime();
@@ -166,11 +165,7 @@ contract('', async ([owner]) => {
       })  ;
 
 
-    } catch (e) {
-      retError = e
-    }
 
-    assert.equal(retError, undefined)
 
   })
 
