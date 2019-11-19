@@ -1,7 +1,7 @@
 require('truffle-test-utils').init()
 const colors = require('colors/safe')
 const web3 = global.web3
-
+//needed to change the ip address:port that will be used
 web3.setProvider(new web3.providers.HttpProvider('http://192.168.1.58:18545'));
 
 const BigNumber = require('bignumber.js')
@@ -27,8 +27,15 @@ const DYNAMIC_HOLDER = '0xb957c97b508a10851724d7b68698f88803338ced'
 
 const USER1_ADDRESS = '0xf48ca621440226f0e98d73f9538404e573930864';
 const USER2_ADDRESS = '0xf09ad5c6fe391a420d45397b50fefe5d7fe81ea9';
+const EXCHANGE1_ADDRESS = '0x3449fc52745be7235cb89ad23df4c73a811f5811';
+const EXCHANGE2_ADDRESS = '0xabbba0a37c3164285c615becf233936c7248440e';
 
 const emptyAddress = '0x0000000000000000000000000000000000000000';
+
+const FIRST_OPEN_SALE_AMOUNT = 80000000 ;
+const SECOND_OPEN_SALE_AMOUNT = 70000000 ;
+
+
 
 //supposed 1 usdt = 5 wan
 //         1 usdt = 10 cfunc
@@ -53,6 +60,12 @@ const WAN_CONTRIBUTE_AMOUNT = 10.1 //10.1 WAN
 const ether = new BigNumber(Math.pow(10, 18));
 
 const GasPrice = 180000000000
+
+let MAX_OPEN_SOLD =  new BigNumber(FIRST_OPEN_SALE_AMOUNT).mul(new BigNumber(PHASE1_WanRatioOfSold));
+MAX_OPEN_SOLD = MAX_OPEN_SOLD.mul(ether).div(new BigNumber(DIVIDER));
+
+let MAX_EXCHANGE_MINT =  new BigNumber(FIRST_OPEN_SALE_AMOUNT).mul(ether).sub(new BigNumber(MAX_OPEN_SOLD));
+
 ////////////////////////////////////////////////////////////////////////////////////
 
 let FinNexusContributionInstance,
@@ -98,24 +111,8 @@ var wait = function (conditionFunc) {
 ////////////////////////////////////////////////////////////////////////////////////////
 contract('', async ([owner]) => {
 
-    function wrappedWeb3SendTransaction(obj, showLog) {
-        return new Promise( (resolve, reject) => {
-            web3.eth.sendTransaction(obj, function(err, result){
-                if(showLog){
-                   console.log(result)
-                }
 
-                if(err) {
-                    console.log('err' + err);
-                    return reject(err);
-                }
-
-                resolve();
-            });
-        });
-    }
-
-  it('Deploy contracts', async () => {
+  it('[10000000] Deploy contracts', async () => {
 
     owner = OWNER_ADDRESS;
     // unlock accounts
@@ -148,7 +145,7 @@ contract('', async ([owner]) => {
   })
 
 
-  it('[Contract initialize] initialize contract should success', async () => {
+  it('[10000010] initialize contract should success', async () => {
 
     PHASE1_StartTime = Date.now()/1000;
     PHASE1_EndTime = PHASE1_StartTime + TIME_INTERVAL;
@@ -189,13 +186,12 @@ contract('', async ([owner]) => {
       assert.equal(gotWAN_CFUNC_RATE,PHASE1_Wan2CfuncRate);
       assert.equal(initialized,true);
 
-
-
       let gotMAX_OPEN_SOLD =  await FinNexusContributionInstance.MAX_OPEN_SOLD();
       let gotMAX_EXCHANGE_MINT =  await FinNexusContributionInstance.MAX_EXCHANGE_MINT();
 
-      console.log(colors.green('gotMAX_OPEN_SOLD: ',gotMAX_OPEN_SOLD));
-      console.log(colors.green('gotMAX_EXCHANGE_MINT: ',gotMAX_EXCHANGE_MINT));
+      console.log(colors.green('gotMAX_OPEN_SOLD: ',gotMAX_OPEN_SOLD,MAX_OPEN_SOLD));
+
+      console.log(colors.green('gotMAX_EXCHANGE_MINT: ',gotMAX_EXCHANGE_MINT,MAX_EXCHANGE_MINT));
 
       ret = await CFuncTokenInstance.init(PHASE1,PHASE1_ConTokenStartTime,PHASE1_ConTokenEndTime,PHASE1_CFunc2AbtRatio);
       //console.log(ret)
@@ -207,6 +203,10 @@ contract('', async ([owner]) => {
       assert.equal(gotConStartTime,parseInt(PHASE1_ConTokenStartTime));
       assert.equal(gotConEndTime,parseInt(PHASE1_ConTokenEndTime));
       assert.equal(gotConRatio,PHASE1_CFunc2AbtRatio);
+
+      assert.equal(gotMAX_EXCHANGE_MINT.toNumber(),MAX_EXCHANGE_MINT.toNumber());
+      assert.equal(gotMAX_OPEN_SOLD.toNumber(),MAX_OPEN_SOLD.toNumber());
+
 
       assert.web3Event(ret, {
             event: 'FirstPhaseParameters',
@@ -220,7 +220,55 @@ contract('', async ([owner]) => {
 
   })
 
-    it('[contribution contract] user using fallback to buy coin with wan ,should success ', async () => {
+
+
+  it('[90000880] mint Cfunc for exchange,should success ', async () => {
+
+        var preTokens = await CFuncTokenInstance.balanceOf(EXCHANGE1_ADDRESS);
+
+        let ret = await FinNexusContributionInstance.mintExchangeToken( EXCHANGE1_ADDRESS,
+                                                                    MAX_EXCHANGE_MINT,
+                                                                    {from:WALLET_ADDRESS});
+
+        console.log(ret)
+
+        gotTokens = await CFuncTokenInstance.balanceOf(EXCHANGE1_ADDRESS);
+
+        console.log("function got tokens=",gotTokens);
+
+        assert.equal(gotTokens - preTokens,MAX_EXCHANGE_MINT);
+   })
+
+
+
+/*
+  it('[90008900] user using normal func to buy coin with wan ,should success ', async () => {
+
+        var preTokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
+
+        var preBalance = await web3.eth.getBalance(WALLET_ADDRESS);
+
+        ret = await FinNexusContributionInstance.buyCFuncCoin(USER1_ADDRESS,
+            {   from:USER1_ADDRESS,
+                value:web3.toWei(WAN_CONTRIBUTE_AMOUNT),
+                gas: 4700000,
+                gasPrice: "0x"+(GasPrice).toString(16)
+            });
+
+        expectTokens = WAN_CONTRIBUTE_AMOUNT * ether * PHASE1_Wan2CfuncRate / DIVIDER;
+        gotTokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
+
+        console.log("function got tokens=",gotTokens);
+
+        assert.equal(gotTokens.sub(preTokens).toNumber(), expectTokens);
+
+        var afterBalance = await web3.eth.getBalance(WALLET_ADDRESS);
+
+        assert.equal(afterBalance - preBalance,web3.toWei(WAN_CONTRIBUTE_AMOUNT));
+
+   })
+
+   it('[90009000] user using fallback to buy coin with wan ,should success ', async () => {
 
         var preTokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
 
@@ -232,14 +280,6 @@ contract('', async ([owner]) => {
                                         });
 
         wait(function(){return web3.eth.getTransaction(txhash).blockNumber != null;});
-
-        // await wrappedWeb3SendTransaction({
-        //     from: USER1_ADDRESS,
-        //     to:FinNexusContributionInstanceAddress,
-        //     value: web3.toWei(WAN_CONTRIBUTE_AMOUNT),
-        // },true);
-
-
 
         expectTokens = WAN_CONTRIBUTE_AMOUNT * ether * PHASE1_Wan2CfuncRate / DIVIDER;
 
@@ -254,33 +294,9 @@ contract('', async ([owner]) => {
 
     })
 
-  it('[contribution contract] user using normal func to buy coin with wan ,should success ', async () => {
-
-        var preTokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
-
-        var preBalance = await web3.eth.getBalance(WALLET_ADDRESS);
-
-        ret = await FinNexusContributionInstance.buyCFuncCoin(USER1_ADDRESS,
-                                                        {   from:USER1_ADDRESS,
-                                                            value:web3.toWei(WAN_CONTRIBUTE_AMOUNT),
-                                                            gas: 4700000,
-                                                            gasPrice: "0x"+(GasPrice).toString(16)
-                                                        });
-
-        expectTokens = WAN_CONTRIBUTE_AMOUNT * ether * PHASE1_Wan2CfuncRate / DIVIDER;
-        gotTokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
-
-        console.log("function got tokens=",gotTokens);
-
-        assert.equal(gotTokens.sub(preTokens).toNumber(), expectTokens);
-
-        var afterBalance = await web3.eth.getBalance(WALLET_ADDRESS);
-
-        assert.equal(afterBalance - preBalance,web3.toWei(WAN_CONTRIBUTE_AMOUNT));
-
-  })
 
 
+*/
 
 
 
