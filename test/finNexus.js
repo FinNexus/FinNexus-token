@@ -1,6 +1,9 @@
 require('truffle-test-utils').init()
 const colors = require('colors/safe')
 const web3 = global.web3
+
+web3.setProvider(new web3.providers.HttpProvider('http://192.168.1.58:18545'));
+
 const BigNumber = require('bignumber.js')
 
 const FinNexusSol = artifacts.require('./FinNexusContribution.sol')
@@ -68,54 +71,49 @@ let FinNexusContributionInstance,
     PHASE2_ConTokenEndTime
 
 ////////////////////////////////////////////////////////////////////////////////////
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms))
-}
-
-async function setHalt(contract, state, operator) {
-    await contract.setHalt(state, {from: operator})
-    assert.equal(await contract.halted(), state)
-}
-
-function wrappedWeb3SendTransaction(obj, showLog) {
-    return new Promise( (resolve, reject) => {
-        web3.eth.sendTransaction(obj, function(err, result){
-            if(showLog){
-                logSeperator();
-                console.log('err' + err);
-            }
-            if(err) {
-                return reject(err);
-            }
-            resolve();
-        });
-    });
-}
-
-async function assertWalletReceivedFund(prevBalance, receivedFundInEther){
-    var postWalletBalance = await web3.fromWei(web3.eth.getBalance(wanWallet));
-    assert.equal(postWalletBalance.sub(prevBalance),  receivedFundInEther);
-}
-
-async function assertWalletReceivedFundNearly(prevBalance, receivedFundInEther){
-    var postWalletBalance = await web3.fromWei(web3.eth.getBalance(wanWallet));
-    assert.ok(postWalletBalance.sub(prevBalance).sub(receivedFundInEther).abs() < 0.01);
-}
-
-
-async function assertUserReceivedLockedToken(addr, prevBalance, receivedTokenInEther, log){
-    var postUserTokens = await web3.fromWei(await wanContract.lockedBalanceOf(addr));
-    if(false){
-        console.log('pre: ' + prevBalance);
-        console.log('post: ' + postUserTokens);
-        console.log('postUserTokens.sub(prevBalance): ' + postUserTokens.sub(prevBalance));
-        console.log('receivedTokenInEther: ' + receivedTokenInEther);
+function sleep(numberMillis) {
+    var now = new Date();
+    var exitTime = now.getTime() + numberMillis;
+    while (true) {
+        now = new Date();
+        if (now.getTime() > exitTime)
+            return;
     }
-    assert.equal(postUserTokens.sub(prevBalance),  receivedTokenInEther);
 }
+
+var wait = function (conditionFunc) {
+    var loopLimit = 100;
+    var loopTimes = 0;
+    while (!conditionFunc()) {
+        sleep(1000);
+        loopTimes++;
+        if(loopTimes>=loopLimit){
+            throw Error("wait timeout! conditionFunc:" + conditionFunc)
+        }
+    }
+}
+
+
 
 ////////////////////////////////////////////////////////////////////////////////////////
 contract('', async ([owner]) => {
+
+    function wrappedWeb3SendTransaction(obj, showLog) {
+        return new Promise( (resolve, reject) => {
+            web3.eth.sendTransaction(obj, function(err, result){
+                if(showLog){
+                   console.log(result)
+                }
+
+                if(err) {
+                    console.log('err' + err);
+                    return reject(err);
+                }
+
+                resolve();
+            });
+        });
+    }
 
   it('Deploy contracts', async () => {
 
@@ -222,16 +220,45 @@ contract('', async ([owner]) => {
 
   })
 
-  it('[contribution contract] user using normal func to buy coin with wan ,should success ', async () => {
+    it('[contribution contract] user using fallback to buy coin with wan ,should success ', async () => {
 
         var preTokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
+
+        var preBalance = await web3.eth.getBalance(WALLET_ADDRESS);
+
+        txhash = await web3.eth.sendTransaction({from:USER1_ADDRESS,
+                                        to:FinNexusContributionInstanceAddress,
+                                        value:web3.toWei(WAN_CONTRIBUTE_AMOUNT),
+                                        });
+
+        wait(function(){return web3.eth.getTransaction(txhash).blockNumber != null;});
 
         // await wrappedWeb3SendTransaction({
         //     from: USER1_ADDRESS,
         //     to:FinNexusContributionInstanceAddress,
-        //     value:  WAN_CONTRIBUTE_AMOUNT * ether,
-        //     gas:1000000
-        // }).catch(() => {} );
+        //     value: web3.toWei(WAN_CONTRIBUTE_AMOUNT),
+        // },true);
+
+
+
+        expectTokens = WAN_CONTRIBUTE_AMOUNT * ether * PHASE1_Wan2CfuncRate / DIVIDER;
+
+        gotTokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
+
+        console.log("fallback got tokens=",gotTokens);
+
+        assert.equal(gotTokens.sub(preTokens).toNumber(), expectTokens);
+
+        var afterBalance = await web3.eth.getBalance(WALLET_ADDRESS);
+        assert.equal(afterBalance - preBalance,web3.toWei(WAN_CONTRIBUTE_AMOUNT));
+
+    })
+
+  it('[contribution contract] user using normal func to buy coin with wan ,should success ', async () => {
+
+        var preTokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
+
+        var preBalance = await web3.eth.getBalance(WALLET_ADDRESS);
 
         ret = await FinNexusContributionInstance.buyCFuncCoin(USER1_ADDRESS,
                                                         {   from:USER1_ADDRESS,
@@ -239,16 +266,21 @@ contract('', async ([owner]) => {
                                                             gas: 4700000,
                                                             gasPrice: "0x"+(GasPrice).toString(16)
                                                         });
-        console.log(ret);
 
         expectTokens = WAN_CONTRIBUTE_AMOUNT * ether * PHASE1_Wan2CfuncRate / DIVIDER;
         gotTokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
 
-        console.log("got tokens=",gotTokens);
+        console.log("function got tokens=",gotTokens);
 
         assert.equal(gotTokens.sub(preTokens).toNumber(), expectTokens);
 
+        var afterBalance = await web3.eth.getBalance(WALLET_ADDRESS);
+
+        assert.equal(afterBalance - preBalance,web3.toWei(WAN_CONTRIBUTE_AMOUNT));
+
   })
+
+
 
 
 
