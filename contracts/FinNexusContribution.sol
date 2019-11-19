@@ -27,8 +27,6 @@ import "./Owned.sol";
 
 contract CFuncTokenInterface {
     function mintToken(address _receipent, uint _amount) external;
-    function mintExchangeQuota(address _receipent, uint _amount) external;
-    function burnExchangeQuota() external;
     function conEndTime()  public view returns(uint);
 }
 
@@ -103,9 +101,10 @@ contract FinNexusContribution is Owned {
 
     event FirstPhaseTime(uint indexed startTime,uint indexed endTime);
     event SecondPhaseTime(uint indexed startTime,uint indexed endTime);
-    event NewSale(address indexed destAddress, uint indexed ethCost, uint indexed gotTokens);
-    event MintExchangeQuota(address indexed exchangeAddr, uint indexed amount);
+    event NewSale(address indexed destAddress, uint indexed wanCost, uint indexed gotTokens);
+    event MintExchangeSale(address indexed exchangeAddr, uint indexed amount);
 
+    event contribution(address indexed destAddress, uint indexed wanCost);
     /*
      * MODIFIERS
      */
@@ -254,11 +253,11 @@ contract FinNexusContribution is Owned {
         uint availToken = MAX_EXCHANGE_MINT.sub(mintExchangeTokens);
         if (availToken >= _amount) {
             mintExchangeTokens = mintExchangeTokens.add(_amount);
-            CFuncTokenInterface(cfuncTokenAddress).mintExchangeQuota(_exchangeAddr, _amount);
-            emit MintExchangeQuota(_exchangeAddr,_amount);
+            CFuncTokenInterface(cfuncTokenAddress).mintToken(_exchangeAddr, _amount);
+            emit MintExchangeSale(_exchangeAddr,_amount);
         } else {
-            CFuncTokenInterface(cfuncTokenAddress).mintExchangeQuota(_exchangeAddr,availToken);
-            emit MintExchangeQuota(_exchangeAddr,availToken);
+            CFuncTokenInterface(cfuncTokenAddress).mintToken(_exchangeAddr,availToken);
+            emit MintExchangeSale(_exchangeAddr,availToken);
         }
     }
 
@@ -266,7 +265,7 @@ contract FinNexusContribution is Owned {
     /**
      * Fallback function
      *
-     * @dev If anybody sends Ether directly to this  contract, consider he is getting wan token
+     * @dev If anybody sends Wan directly to this  contract, consider he is getting wan token
      */
     function () public payable {
     	buyCFuncCoin(msg.sender);
@@ -302,7 +301,7 @@ contract FinNexusContribution is Owned {
      * @dev Emergency situation that requires contribution period to stop,Contributing not possible anymore.
      */
 
-    function halt() public onlyWallet{
+    function halt() public onlyOwner{
         halted = true;
     }
 
@@ -311,21 +310,31 @@ contract FinNexusContribution is Owned {
      * @dev Emergency situation resolved, Contributing becomes possible again withing the outlined restrictions.
      */
 
-    function unHalt() public onlyWallet{
+    function unHalt() public onlyOwner{
         halted = false;
     }
 
     /**
      * public function
      *
-     * @dev burn minted exchange quota
+     * @dev set rate from wan to cfunc
+     * @param _Wan2CfuncRate the exchange rate
      *
      */
-    function burnExchangeQuota()
-        public
-        onlyWallet
-    {
-        CFuncTokenInterface(cfuncTokenAddress).burnExchangeQuota();
+    function setExchangeRate(uint _Wan2CfuncRate) public onlyOwner{
+        require(_Wan2CfuncRate != 0);
+        WAN_CFUNC_RATE =  _Wan2CfuncRate;
+    }
+
+    /**
+     * public function
+     *
+     * @dev changed wallet address for Emergency
+     * @param _newAddress new address
+     *
+     */
+    function changeWalletAddress(address _newAddress) onlyWallet {
+        walletAddress = _newAddress;
     }
 
     //////////////// internal function ////////////////////////////
@@ -365,7 +374,7 @@ contract FinNexusContribution is Owned {
         }
     }
 
-    /// @dev Utility function for calculate available tokens and cost ethers
+    /// @dev Utility function for calculate available tokens and cost wans
     function costAndBuyTokens(uint availableToken) constant internal returns (uint costValue, uint getTokens){
 
     	getTokens = WAN_CFUNC_RATE.mul(msg.value).div(DIVISOR);

@@ -70,8 +70,6 @@ contract CFuncToken is StandardToken {
     /*
      * EVENTS
      */
-    event ExchangeSale(address indexed to, uint indexed value);
-
     event ConvertCfunc2Abt(address indexed initiator,uint indexed value);
 
     event FirstPhaseParameters(uint indexed startTime,uint indexed endTime,uint indexed conRatio);
@@ -119,7 +117,7 @@ contract CFuncToken is StandardToken {
      * @param   _conRatio the conRatio for converting cfunc to abt
      */
     function init(uint _phase,uint _conStartTime,uint _conEndTime,uint _conRatio)
-        external
+        public
         onlyInitiator
     {
        require(_phase == 1 || _phase == 2);
@@ -145,6 +143,7 @@ contract CFuncToken is StandardToken {
           emit FirstPhaseParameters(_conStartTime,_conEndTime,_conRatio);
 
        }
+
 
     }
 
@@ -199,72 +198,7 @@ contract CFuncToken is StandardToken {
 
     }
 
-    /**
-     * public FUNCTION
-     * @dev mint cfunc quato for exchange
-     * @param _receipent The destination account for exchange
-     * @param _amount The amount of token quato be sent to this address.
-     *
-     */
-    function mintExchangeQuota(address _receipent, uint _amount)
-        external
-        onlyMinter
-    {
-        if (exchangeBalances[_receipent] == 0) {
-          exchangeAddress[exchangeCount] = _receipent;
-          exchangeCount = exchangeCount.add(1);
-        }
 
-      	exchangeBalances[_receipent] = exchangeBalances[_receipent].add(_amount);
-    }
-
-    /**
-     * public FUNCTION
-     * @dev burn unused cfunc quato for exchange
-     *
-     */
-    function burnExchangeQuota()
-        external
-        onlyMinter
-    {
-        //after converting from cufnc to abt, burn quato is allowed
-      	require(now > conEndTime);
-
-      	for (uint i = 0; i <= exchangeCount; i++) {
-            address receipent = exchangeAddress[i];
-            exchangeBalances[receipent] = 0;
-            exchangeAddress[i] = 0x0;
-        }
-
-        exchangeCount = 0;
-
-        totalSupply = totalSupply.sub(totalCfunc2Abt);
-    }
-
-    /**
-     * public FUNCTION
-     *
-     * @dev exchange mint token for common investor
-     * @param _to The destination account owned mint tokens
-     * @param _value The amount of mint token be sent to this address.
-     *
-     */
-    function exchangeMintToken(address _to, uint _value)
-        public
-        onlyPayloadSize(2 * 32)
-        maxWanTokenAmountNotReached(_value)
-    {
-
-        require(_value > 0);
-        require(_to != 0x0);
-        require(exchangeBalances[msg.sender] >= _value);
-
-        exchangeBalances[msg.sender] = exchangeBalances[msg.sender].sub(_value);
-        balances[_to] = balances[_to].add(_value);
-        totalSupply = totalSupply.add(_value);
-
-        emit ExchangeSale(_to,_value);
-    }
 
     /**
      * EXTERNAL FUNCTION
@@ -282,6 +216,7 @@ contract CFuncToken is StandardToken {
         name = _name;
         symbol = _symbol;
     }
+
 
 }
 
