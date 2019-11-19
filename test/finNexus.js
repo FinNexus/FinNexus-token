@@ -241,7 +241,7 @@ contract('', async ([owner]) => {
 
 
 
-/*
+
   it('[90008900] user using normal func to buy coin with wan ,should success ', async () => {
 
         var preTokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
@@ -296,7 +296,7 @@ contract('', async ([owner]) => {
 
 
 
-*/
+
 
 
 
