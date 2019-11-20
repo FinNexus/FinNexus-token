@@ -148,9 +148,10 @@ contract('', async ([owner]) => {
   it('[10000010] initialize contract should success', async () => {
 
     PHASE1_StartTime = Date.now()/1000;
-    PHASE1_EndTime = PHASE1_StartTime + TIME_INTERVAL;
-    PHASE1_ConTokenStartTime = PHASE1_StartTime + 2*TIME_INTERVAL;
-    PHASE1_ConTokenEndTime = PHASE1_StartTime + 3*TIME_INTERVAL;
+    PHASE1_EndTime = PHASE1_StartTime + 2*TIME_INTERVAL;
+
+    PHASE1_ConTokenStartTime = PHASE1_StartTime;
+    PHASE1_ConTokenEndTime = PHASE1_StartTime + 2*TIME_INTERVAL;
 
 
     console.log(colors.green('Phase1 start time: ',PHASE1_StartTime));
@@ -217,7 +218,6 @@ contract('', async ([owner]) => {
             }
       })  ;
 
-
   })
 
 
@@ -229,8 +229,7 @@ contract('', async ([owner]) => {
         let ret = await FinNexusContributionInstance.mintExchangeToken( EXCHANGE1_ADDRESS,
                                                                     MAX_EXCHANGE_MINT,
                                                                     {from:WALLET_ADDRESS});
-
-        console.log(ret)
+       // console.log(ret)
 
         gotTokens = await CFuncTokenInstance.balanceOf(EXCHANGE1_ADDRESS);
 
@@ -238,7 +237,6 @@ contract('', async ([owner]) => {
 
         assert.equal(gotTokens - preTokens,MAX_EXCHANGE_MINT);
    })
-
 
 
 
@@ -255,12 +253,13 @@ contract('', async ([owner]) => {
                 gasPrice: "0x"+(GasPrice).toString(16)
             });
 
-        expectTokens = WAN_CONTRIBUTE_AMOUNT * ether * PHASE1_Wan2CfuncRate / DIVIDER;
+        expectTokens = new BigNumber(WAN_CONTRIBUTE_AMOUNT).mul(ether).mul(PHASE1_Wan2CfuncRate).div(DIVIDER);
+
         gotTokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
 
-        console.log("function got tokens=",gotTokens);
+        console.log("function got tokens=",gotTokens.toNumber());
 
-        assert.equal(gotTokens.sub(preTokens).toNumber(), expectTokens);
+        assert.equal(gotTokens.sub(preTokens).toNumber(), expectTokens.toNumber());
 
         var afterBalance = await web3.eth.getBalance(WALLET_ADDRESS);
 
@@ -268,32 +267,58 @@ contract('', async ([owner]) => {
 
    })
 
-   it('[90009000] user using fallback to buy coin with wan ,should success ', async () => {
 
-        var preTokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
+    it('[90008910] user convert cfunc to abt,should success ', async () => {
+        //user1's token from  [90008900]
+        var pretAbtToken =  await AbtTokenInstance.balanceOf(USER1_ADDRESS)
 
-        var preBalance = await web3.eth.getBalance(WALLET_ADDRESS);
+        var cfuncTokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
+        var cft = new BigNumber(cfuncTokens).mul(PHASE1_CFunc2AbtRatio).div(DIVIDER);
+        console.log('cufnc tokens=',cfuncTokens.toNumber(),"covert tokens=",cft.toNumber());
 
-        txhash = await web3.eth.sendTransaction({from:USER1_ADDRESS,
-                                        to:FinNexusContributionInstanceAddress,
-                                        value:web3.toWei(WAN_CONTRIBUTE_AMOUNT),
-                                        });
+        var ret = await CFuncTokenInstance.convert2Abt(cft.toNumber(),{from:USER1_ADDRESS});
 
-        wait(function(){return web3.eth.getTransaction(txhash).blockNumber != null;});
+        console.log(ret);
 
-        expectTokens = WAN_CONTRIBUTE_AMOUNT * ether * PHASE1_Wan2CfuncRate / DIVIDER;
+        var expectAbt = cft.div(10);
 
-        gotTokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
+        var gotTokens = await AbtTokenInstance.balanceOf(USER1_ADDRESS);
 
-        console.log("fallback got tokens=",gotTokens);
+        console.log("function got tokens=",gotTokens);
 
-        assert.equal(gotTokens.sub(preTokens).toNumber(), expectTokens);
-
-        var afterBalance = await web3.eth.getBalance(WALLET_ADDRESS);
-        assert.equal(afterBalance - preBalance,web3.toWei(WAN_CONTRIBUTE_AMOUNT));
+        assert.equal(gotTokens.sub(pretAbtToken).toNumber(), expectAbt.toNumber());
 
     })
 
+
+    /*
+       it('[90009000] user using fallback to buy coin with wan ,should success ', async () => {
+
+            var preTokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
+
+            var preBalance = await web3.eth.getBalance(WALLET_ADDRESS);
+
+            txhash = await web3.eth.sendTransaction({from:USER1_ADDRESS,
+                                            to:FinNexusContributionInstanceAddress,
+                                            value:web3.toWei(WAN_CONTRIBUTE_AMOUNT),
+                                            });
+
+            wait(function(){return web3.eth.getTransaction(txhash).blockNumber != null;});
+
+            expectTokens = WAN_CONTRIBUTE_AMOUNT * ether * PHASE1_Wan2CfuncRate / DIVIDER;
+
+            gotTokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
+
+            console.log("fallback got tokens=",gotTokens);
+
+            assert.equal(gotTokens.sub(preTokens).toNumber(), expectTokens);
+
+            var afterBalance = await web3.eth.getBalance(WALLET_ADDRESS);
+            assert.equal(afterBalance - preBalance,web3.toWei(WAN_CONTRIBUTE_AMOUNT));
+
+        })
+
+    */
 
 
 

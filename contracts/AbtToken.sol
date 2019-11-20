@@ -36,7 +36,7 @@ contract AbtToken is StandardToken {
     uint public constant decimals = 18;
     address public minter; 
 
-    //500000000 * 0.8
+    //5000000000 * 0.8
     uint public constant MAX_TOTAL_TOKEN_AMOUNT = 400000000 ether;
 
     uint public constant DIVISOR = 1000;
@@ -72,7 +72,7 @@ contract AbtToken is StandardToken {
         external
         onlyMinter
     {
-        //time check will do in minter cfunc token
+       //time check will do in minter cfunc token
         require(_receipent != 0x0);
         require(_amount > 0);
 

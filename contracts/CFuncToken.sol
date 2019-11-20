@@ -174,10 +174,10 @@ contract CFuncToken is StandardToken {
      *
      */
     function convert2Abt(uint _value)
-      onlyPayloadSize(2 * 32)
       public
     {
         require(now >= conStartTime && now <= conEndTime);
+
         require(_value > 0);
         require(balances[msg.sender] >= _value);
 
@@ -192,11 +192,16 @@ contract CFuncToken is StandardToken {
 
       	balances[msg.sender] = balances[msg.sender].sub(_value);
         totalCfunc2Abt = totalCfunc2Abt.add(_value);
+
         abtToken.mintToken(msg.sender, _value);
 
         emit ConvertCfunc2Abt(msg.sender,_value);
 
     }
+
+
+
+
 
 
 
