@@ -278,7 +278,7 @@ contract('', async ([owner]) => {
 
         var ret = await CFuncTokenInstance.convert2Abt(cft.toNumber(),{from:USER1_ADDRESS});
 
-        console.log(ret);
+        //console.log(ret);
 
         var expectAbt = cft.div(10);
 
@@ -287,12 +287,10 @@ contract('', async ([owner]) => {
         console.log("function got tokens=",gotTokens);
 
         assert.equal(gotTokens.sub(pretAbtToken).toNumber(), expectAbt.toNumber());
-
     })
 
 
-    /*
-       it('[90009000] user using fallback to buy coin with wan ,should success ', async () => {
+    it('[90009000] user using fallback to buy coin with wan ,should success ', async () => {
 
             var preTokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
 
@@ -316,11 +314,7 @@ contract('', async ([owner]) => {
             var afterBalance = await web3.eth.getBalance(WALLET_ADDRESS);
             assert.equal(afterBalance - preBalance,web3.toWei(WAN_CONTRIBUTE_AMOUNT));
 
-        })
-
-    */
-
-
+     })
 
 
 
