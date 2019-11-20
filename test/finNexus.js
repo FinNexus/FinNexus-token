@@ -284,7 +284,7 @@ contract('', async ([owner]) => {
 
         var gotTokens = await AbtTokenInstance.balanceOf(USER1_ADDRESS);
 
-        console.log("function got tokens=",gotTokens);
+        console.log("user1 got abt tokens=",gotTokens);
 
         assert.equal(gotTokens.sub(pretAbtToken).toNumber(), expectAbt.toNumber());
     })
@@ -303,19 +303,62 @@ contract('', async ([owner]) => {
 
             wait(function(){return web3.eth.getTransaction(txhash).blockNumber != null;});
 
-            expectTokens = WAN_CONTRIBUTE_AMOUNT * ether * PHASE1_Wan2CfuncRate / DIVIDER;
+            expectTokens = new BigNumber(WAN_CONTRIBUTE_AMOUNT).mul(ether).mul(PHASE1_Wan2CfuncRate).div(DIVIDER);
 
             gotTokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
 
-            console.log("fallback got tokens=",gotTokens);
+            console.log("fallback got tokens=",gotTokens.toNumber());
 
-            assert.equal(gotTokens.sub(preTokens).toNumber(), expectTokens);
+            assert.equal(gotTokens.sub(preTokens).toNumber(), expectTokens.toNumber());
 
             var afterBalance = await web3.eth.getBalance(WALLET_ADDRESS);
             assert.equal(afterBalance - preBalance,web3.toWei(WAN_CONTRIBUTE_AMOUNT));
 
      })
 
+
+    it('[90009010] user1 transfer cfunc to user2,should success ', async () => {
+
+
+        var cfuncTokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
+
+        var ret = await CFuncTokenInstance.transfer(USER2_ADDRESS,cfuncTokens.toNumber(),{from:USER1_ADDRESS});
+
+
+        var user1Tokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
+
+        console.log("user1 abt got tokens=",user1Tokens);
+        assert.equal(user1Tokens.toNumber(),0);
+
+        var user2Tokens = await CFuncTokenInstance.balanceOf(USER2_ADDRESS);
+
+        console.log("user2 got tokens=",user2Tokens);
+
+        assert.equal(user2Tokens.toNumber(),cfuncTokens);
+
+    })
+
+
+    it('[90009020] user1 transfer abt to user2,should success ', async () => {
+
+
+        var user1AbtTokens = await AbtTokenInstance.balanceOf(USER1_ADDRESS);
+        console.log("user1 abt tokens=",user1AbtTokens.toNumber());
+
+        var ret = await AbtTokenInstance.transfer(USER2_ADDRESS,user1AbtTokens.toNumber(),{from:USER1_ADDRESS});
+        console.log(ret);
+
+        sleep(20*1000);
+
+        var user1Tokens = await AbtTokenInstance.balanceOf(USER1_ADDRESS);
+        assert.equal(user1Tokens.toNumber(),0);
+
+        var user2Tokens = await AbtTokenInstance.balanceOf(USER2_ADDRESS);
+        console.log("user2 abt tokens=",user2Tokens);
+
+        assert.equal(user2Tokens.toNumber(),user1AbtTokens);
+
+    })
 
 
 
