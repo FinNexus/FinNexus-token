@@ -20,7 +20,7 @@ pragma solidity ^0.4.24;
 
 import "./StandardToken.sol";
 import "./SafeMath.sol";
-import "./AbtToken.sol";
+import "./UM1SToken.sol";
 
 /// @title FinNexus CFUNC Token Contract
 /// For more information about this token sale, please visit https://FinNexus.org
@@ -40,8 +40,8 @@ contract CFuncToken is StandardToken {
 
     uint public constant DIVISOR = 1000;
 
-    /// ERC20 compilant FinNexus ABT token contact instance
-    AbtToken public abtToken;
+    /// ERC20 compilant FinNexus UM1S token contact instance
+    UM1SToken public um1sToken;
 
     /// FinNexus contribution contract
     address public minter;
@@ -52,14 +52,14 @@ contract CFuncToken is StandardToken {
     /// current phase convert end time
     uint public conEndTime;
 
-    //the ratio for cfunc which can be changed to abt
+    //the ratio for cfunc which can be changed to UM1S
     uint public conRatio;
 
     uint public totalSupply;
-    uint public totalCfunc2Abt;
+    uint public totalCfunc2UM1S;
 
     /// the firs data for save
-    uint public firstPhaseCfunc2Abt;
+    uint public firstPhaseCfunc2UM1S;
     uint public firstPhaseTotalSupply;
 
     mapping (address => uint) public exchangeBalances;
@@ -70,7 +70,7 @@ contract CFuncToken is StandardToken {
     /*
      * EVENTS
      */
-    event ConvertCfunc2Abt(address indexed initiator,uint indexed value);
+    event ConvertCfunc2UM1S(address indexed initiator,uint indexed value);
 
     event FirstPhaseParameters(uint indexed startTime,uint indexed endTime,uint indexed conRatio);
     event SecondPhaseParameters(uint  indexed startTime,uint  indexed endTime,uint indexed conRatio);
@@ -104,7 +104,7 @@ contract CFuncToken is StandardToken {
     	minter = _minter;
     	initiator = _initiator;
 
-        abtToken = new AbtToken(this);
+        um1sToken = new UM1SToken(this);
     }
 
     /**
@@ -112,9 +112,9 @@ contract CFuncToken is StandardToken {
      *
      * @dev init token contract
      * @param   _phase the phase for mint token
-     * @param   _conStartTime the start time for converting cfunc to abt
-     * @param   _conEndTime the end time for converting cfunc to abt
-     * @param   _conRatio the conRatio for converting cfunc to abt
+     * @param   _conStartTime the start time for converting cfunc to UM1S
+     * @param   _conEndTime the end time for converting cfunc to UM1S
+     * @param   _conRatio the conRatio for converting cfunc to UM1S
      */
     function init(uint _phase,uint _conStartTime,uint _conEndTime,uint _conRatio)
         public
@@ -135,8 +135,8 @@ contract CFuncToken is StandardToken {
           //convert start time for phase 2 must be later than the convert end time for phase 1
           require(_conStartTime > conEndTime);
           //record the data for 1st stage
-          firstPhaseCfunc2Abt = totalCfunc2Abt;
-          totalCfunc2Abt = 0;
+          firstPhaseCfunc2UM1S = totalCfunc2UM1S;
+          totalCfunc2UM1S = 0;
 
           firstPhaseTotalSupply = totalSupply;
 
@@ -169,11 +169,11 @@ contract CFuncToken is StandardToken {
     /**
      * public FUNCTION
      *
-     * @dev convert cfunc to abt
-     * @param _value The amount converting from cfunc to abt
+     * @dev convert cfunc to UM1S
+     * @param _value The amount converting from cfunc to UM1S
      *
      */
-    function convert2Abt(uint _value)
+    function convert2UM1S(uint _value)
       public
     {
         require(now >= conStartTime && now <= conEndTime);
@@ -184,18 +184,18 @@ contract CFuncToken is StandardToken {
         //cal quota for convert in current phase,cal it here because we do not know totalSupply until now possible,80% is allowed to convert
         uint convertQuota  = totalSupply.sub(firstPhaseTotalSupply).mul(conRatio).div(DIVISOR);
 
-        //totalCfunc2Abt is accumulator for current phase
-        uint availble = convertQuota.sub(_value).sub(totalCfunc2Abt);
+        //totalCfunc2UM1S is accumulator for current phase
+        uint availble = convertQuota.sub(_value).sub(totalCfunc2UM1S);
 
-        //available token must be over the value converted to abt
+        //available token must be over the value converted to UM1S
         assert(availble >= _value);
 
       	balances[msg.sender] = balances[msg.sender].sub(_value);
-        totalCfunc2Abt = totalCfunc2Abt.add(_value);
+        totalCfunc2UM1S = totalCfunc2UM1S.add(_value);
 
-        abtToken.mintToken(msg.sender, _value);
+        um1sToken.mintToken(msg.sender, _value);
 
-        emit ConvertCfunc2Abt(msg.sender,_value);
+        emit ConvertCfunc2UM1S(msg.sender,_value);
 
     }
 

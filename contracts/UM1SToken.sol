@@ -25,13 +25,13 @@ import "./SafeMath.sol";
 /// For more information about this token sale, please visit https://FinNexus.org
 /// @author Cathy - <cathy@FinNexus.org>
 
-contract AbtToken is StandardToken {
+contract UM1SToken is StandardToken {
     
     using SafeMath for uint;
 
     /// Constant token specific fields
-    string public constant name = "ABTCoin";
-    string public constant symbol = "ABT";
+    string public constant name = "UM1SCoin";
+    string public constant symbol = "UM1S";
 
     uint public constant decimals = 18;
     address public minter; 
@@ -56,7 +56,7 @@ contract AbtToken is StandardToken {
      * 
      * @dev Initialize the  BtToken
      */
-    function AbtToken(address _minter){
+    function UM1SToken(address _minter){
     	  minter = _minter;
     }
 

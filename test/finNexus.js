@@ -3,7 +3,6 @@ const colors = require('colors/safe')
 const web3 = global.web3
 //needed to change the ip address:port that will be used
 web3.setProvider(new web3.providers.HttpProvider('http://192.168.1.58:18545'));
-
 const BigNumber = require('bignumber.js')
 
 const FinNexusSol = artifacts.require('./FinNexusContribution.sol')
@@ -14,8 +13,8 @@ const CFuncTokenSol = artifacts.require('./CFuncToken.sol')
 const CFuncTokenABI = artifacts.require('./CFuncToken.sol').abi
 const CFuncToken = web3.eth.contract(CFuncTokenABI)
 
-const AbtTokenABI = artifacts.require('./AbtToken.sol').abi
-const AbtToken = web3.eth.contract(AbtTokenABI)
+const UM1SABI = artifacts.require('./UM1SToken.sol').abi
+const UM1SToken = web3.eth.contract(UM1SABI)
 
 
 const OWNER_ADDRESS = '0xf7a2681f8cf9661b6877de86034166422cd8c308'
@@ -44,12 +43,12 @@ const SECOND_OPEN_SALE_AMOUNT = 70000000 ;
 const PHASE1 = 1
 const PHASE1_WanRatioOfSold = 100 //10%,  it is mul 1000
 const PHASE1_Wan2CfuncRate = 2100 //2.1,  it is mul 1000
-const PHASE1_CFunc2AbtRatio = 800 //80%,  it is mul 1000
+const PHASE1_CFunc2UM1SRatio = 800 //80%,  it is mul 1000
 
 const PHASE2 = 2
 const PHASE2_WanRatioOfSold = 100 //10%,  it is mul 1000
 const PHASE2_Wan2CfuncRate = 2100 //2.1,  it is mul 1000
-const PHASE2_CFunc2AbtRatio = 800 //80%,  it is mul 1000
+const PHASE2_CFunc2UM1SRatio = 800 //80%,  it is mul 1000
 
 const DIVIDER = 1000
 
@@ -72,8 +71,8 @@ let FinNexusContributionInstance,
     FinNexusContributionInstanceAddress,
     CFuncTokenInstance,
     CFuncTokenInstanceAddress,
-    AbtTokenInstance,
-    AbtTokenInstanceAddress,
+    UM1SInstance,
+    UM1SInstanceAddress,
     PHASE1_StartTime,
     PHASE1_EndTime,
     PHASE1_ConTokenStartTime,
@@ -135,9 +134,9 @@ contract('', async ([owner]) => {
     console.log(colors.green('[INFO] CFuncTokenInstance address:', CFuncTokenInstanceAddress));
 
 
-    AbtTokenInstanceAddress = await CFuncTokenInstance.abtToken();
-    console.log(colors.green('[INFO] AbtTokenInstance address:', AbtTokenInstanceAddress));
-    AbtTokenInstance = AbtToken.at(AbtTokenInstanceAddress);
+    UM1SInstanceAddress = await CFuncTokenInstance.um1sToken();
+    console.log(colors.green('[INFO] UM1SInstance address:', UM1SInstanceAddress));
+    UM1SInstance = UM1SToken.at(UM1SInstanceAddress);
 
     console.log(colors.green('[INFO] Contracts deployed success!', ''));
 
@@ -194,7 +193,7 @@ contract('', async ([owner]) => {
 
       console.log(colors.green('gotMAX_EXCHANGE_MINT: ',gotMAX_EXCHANGE_MINT,MAX_EXCHANGE_MINT));
 
-      ret = await CFuncTokenInstance.init(PHASE1,PHASE1_ConTokenStartTime,PHASE1_ConTokenEndTime,PHASE1_CFunc2AbtRatio);
+      ret = await CFuncTokenInstance.init(PHASE1,PHASE1_ConTokenStartTime,PHASE1_ConTokenEndTime,PHASE1_CFunc2UM1SRatio);
       //console.log(ret)
 
       let gotConStartTime =  await CFuncTokenInstance.conStartTime();
@@ -203,7 +202,7 @@ contract('', async ([owner]) => {
 
       assert.equal(gotConStartTime,parseInt(PHASE1_ConTokenStartTime));
       assert.equal(gotConEndTime,parseInt(PHASE1_ConTokenEndTime));
-      assert.equal(gotConRatio,PHASE1_CFunc2AbtRatio);
+      assert.equal(gotConRatio,PHASE1_CFunc2UM1SRatio);
 
       assert.equal(gotMAX_EXCHANGE_MINT.toNumber(),MAX_EXCHANGE_MINT.toNumber());
       assert.equal(gotMAX_OPEN_SOLD.toNumber(),MAX_OPEN_SOLD.toNumber());
@@ -214,7 +213,7 @@ contract('', async ([owner]) => {
             args: {
                 startTime: parseInt(PHASE1_ConTokenStartTime),
                 endTime: parseInt(PHASE1_ConTokenEndTime),
-                conRatio: PHASE1_CFunc2AbtRatio
+                conRatio: PHASE1_CFunc2UM1SRatio
             }
       })  ;
 
@@ -268,25 +267,25 @@ contract('', async ([owner]) => {
    })
 
 
-    it('[90008910] user convert cfunc to abt,should success ', async () => {
+    it('[90008910] user convert cfunc to UM1S,should success ', async () => {
         //user1's token from  [90008900]
-        var pretAbtToken =  await AbtTokenInstance.balanceOf(USER1_ADDRESS)
+        var pretUM1SToken =  await UM1SInstance.balanceOf(USER1_ADDRESS)
 
         var cfuncTokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
-        var cft = new BigNumber(cfuncTokens).mul(PHASE1_CFunc2AbtRatio).div(DIVIDER);
+        var cft = new BigNumber(cfuncTokens).mul(PHASE1_CFunc2UM1SRatio).div(DIVIDER);
         console.log('cufnc tokens=',cfuncTokens.toNumber(),"covert tokens=",cft.toNumber());
 
-        var ret = await CFuncTokenInstance.convert2Abt(cft.toNumber(),{from:USER1_ADDRESS});
+        var ret = await CFuncTokenInstance.convert2UM1S(cft.toNumber(),{from:USER1_ADDRESS});
 
         //console.log(ret);
 
-        var expectAbt = cft.div(10);
+        var expectUM1S = cft.div(10);
 
-        var gotTokens = await AbtTokenInstance.balanceOf(USER1_ADDRESS);
+        var gotTokens = await UM1SInstance.balanceOf(USER1_ADDRESS);
 
-        console.log("user1 got abt tokens=",gotTokens);
+        console.log("user1 got UM1S tokens=",gotTokens);
 
-        assert.equal(gotTokens.sub(pretAbtToken).toNumber(), expectAbt.toNumber());
+        assert.equal(gotTokens.sub(pretUM1SToken).toNumber(), expectUM1S.toNumber());
     })
 
 
@@ -327,7 +326,7 @@ contract('', async ([owner]) => {
 
         var user1Tokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
 
-        console.log("user1 abt got tokens=",user1Tokens);
+        console.log("user1 UM1S got tokens=",user1Tokens);
         assert.equal(user1Tokens.toNumber(),0);
 
         var user2Tokens = await CFuncTokenInstance.balanceOf(USER2_ADDRESS);
@@ -339,24 +338,24 @@ contract('', async ([owner]) => {
     })
 
 
-    it('[90009020] user1 transfer abt to user2,should success ', async () => {
+    it('[90009020] user1 transfer UM1S to user2,should success ', async () => {
 
 
-        var user1AbtTokens = await AbtTokenInstance.balanceOf(USER1_ADDRESS);
-        console.log("user1 abt tokens=",user1AbtTokens.toNumber());
+        var user1UM1STokens = await UM1SInstance.balanceOf(USER1_ADDRESS);
+        console.log("user1 UM1S tokens=",user1UM1STokens.toNumber());
 
-        var ret = await AbtTokenInstance.transfer(USER2_ADDRESS,user1AbtTokens.toNumber(),{from:USER1_ADDRESS});
-        console.log(ret);
+        var txhash = await UM1SInstance.transfer(USER2_ADDRESS,user1UM1STokens.toNumber(),{from:USER1_ADDRESS});
+        console.log(txhash);
 
-        sleep(20*1000);
+        wait(function(){return web3.eth.getTransaction(txhash).blockNumber != null;});
 
-        var user1Tokens = await AbtTokenInstance.balanceOf(USER1_ADDRESS);
+        var user1Tokens = await UM1SInstance.balanceOf(USER1_ADDRESS);
         assert.equal(user1Tokens.toNumber(),0);
 
-        var user2Tokens = await AbtTokenInstance.balanceOf(USER2_ADDRESS);
-        console.log("user2 abt tokens=",user2Tokens);
+        var user2Tokens = await UM1SInstance.balanceOf(USER2_ADDRESS);
+        console.log("user2 UM1S tokens=",user2Tokens);
 
-        assert.equal(user2Tokens.toNumber(),user1AbtTokens);
+        assert.equal(user2Tokens.toNumber(),user1UM1STokens);
 
     })
 
