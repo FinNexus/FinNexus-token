@@ -65,3 +65,24 @@ global.MAX_OPEN_SOLD = MAX_OPEN_SOLD_1.mul(ether).div(new BigNumber(DIVIDER));
 
 global.MAX_EXCHANGE_MINT =  new BigNumber(FIRST_OPEN_SALE_AMOUNT).mul(ether).sub(new BigNumber(MAX_OPEN_SOLD));
 
+global.sleep = function sleep(numberMillis) {
+    var now = new Date();
+    var exitTime = now.getTime() + numberMillis;
+    while (true) {
+        now = new Date();
+        if (now.getTime() > exitTime)
+            return;
+    }
+}
+
+global. wait = function (conditionFunc) {
+    var loopLimit = 100;
+    var loopTimes = 0;
+    while (!conditionFunc()) {
+        sleep(1000);
+        loopTimes++;
+        if(loopTimes>=loopLimit){
+            throw Error("wait timeout! conditionFunc:" + conditionFunc)
+        }
+    }
+}

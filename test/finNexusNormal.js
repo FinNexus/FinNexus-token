@@ -18,31 +18,6 @@ let FinNexusContributionInstance,
     PHASE2_ConTokenStartTime,
     PHASE2_ConTokenEndTime
 
-////////////////////////////////////////////////////////////////////////////////////
-function sleep(numberMillis) {
-    var now = new Date();
-    var exitTime = now.getTime() + numberMillis;
-    while (true) {
-        now = new Date();
-        if (now.getTime() > exitTime)
-            return;
-    }
-}
-
-var wait = function (conditionFunc) {
-    var loopLimit = 100;
-    var loopTimes = 0;
-    while (!conditionFunc()) {
-        sleep(1000);
-        loopTimes++;
-        if(loopTimes>=loopLimit){
-            throw Error("wait timeout! conditionFunc:" + conditionFunc)
-        }
-    }
-}
-
-
-
 ////////////////////////////////////////////////////////////////////////////////////////
 contract('', async ([owner]) => {
 
