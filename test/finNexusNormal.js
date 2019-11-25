@@ -22,7 +22,7 @@ let FinNexusContributionInstance,
 contract('', async ([owner]) => {
 
 
-  it('[10000000] Deploy contracts', async () => {
+  it('[90000000] Deploy contracts', async () => {
 
     owner = OWNER_ADDRESS;
     // unlock accounts
@@ -55,7 +55,7 @@ contract('', async ([owner]) => {
   })
 
 
-  it('[10000010] initialize contract should success', async () => {
+  it('[90000010] initialize contract should success', async () => {
 
     PHASE1_StartTime = Date.now()/1000;
     PHASE1_EndTime = PHASE1_StartTime + 2*TIME_INTERVAL;
