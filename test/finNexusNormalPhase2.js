@@ -58,10 +58,10 @@ contract('', async ([owner]) => {
   it('[30000100] initialize contract should success', async () => {
 
     PHASE1_StartTime = Date.now()/1000;
-    PHASE1_EndTime = PHASE1_StartTime + 2*TIME_INTERVAL;
+    PHASE1_EndTime = PHASE1_StartTime + 120;
 
     PHASE1_ConTokenStartTime = PHASE1_StartTime;
-    PHASE1_ConTokenEndTime = PHASE1_StartTime + 2*TIME_INTERVAL;
+    PHASE1_ConTokenEndTime = PHASE1_StartTime + 120;
 
 
     console.log(colors.green('Phase1 start time: ',PHASE1_StartTime));
@@ -104,7 +104,7 @@ contract('', async ([owner]) => {
 
       console.log(colors.green('gotMAX_EXCHANGE_MINT: ',gotMAX_EXCHANGE_MINT,MAX_EXCHANGE_MINT));
 
-      ret = await CFuncTokenInstance.init(PHASE1,PHASE1_ConTokenStartTime,PHASE1_ConTokenEndTime,PHASE1_CFunc2UM1SRatio);
+      ret = await CFuncTokenInstance.init(PHASE1,PHASE1_ConTokenStartTime,PHASE1_ConTokenEndTime,PHASE1_CFunc2UM1SRatio,{from:owner});
       //console.log(ret)
 
       let gotConStartTime =  await CFuncTokenInstance.conStartTime();
@@ -202,15 +202,17 @@ contract('', async ([owner]) => {
 
     it('[30000500] initialize contract for phase2 should success', async () => {
 
+        wait(function(){return Date.now() / 1000 > PHASE1_ConTokenEndTime});
+
         PHASE2_StartTime = PHASE1_ConTokenEndTime + 10;
         PHASE2_EndTime = PHASE2_StartTime + 2*TIME_INTERVAL;
 
-        PHASE2_ConTokenStartTime = PHASE1_StartTime;
-        PHASE2_ConTokenEndTime = PHASE1_StartTime + 2*TIME_INTERVAL + 10;
+        PHASE2_ConTokenStartTime = PHASE2_StartTime;
+        PHASE2_ConTokenEndTime = PHASE2_StartTime + 2*TIME_INTERVAL + 10;
 
-        wait(function(){return Date.now() / 1000 > PHASE1_EndTime});
 
-        console.log(colors.green('Phase2 start time: ',PHASE2_ConTokenEndTime));
+
+        console.log(colors.green('Phase2 start time: ',PHASE2_StartTime));
 
         ret = await FinNexusContributionInstance.init(PHASE2,
             PHASE2_WanRatioOfSold,
@@ -234,11 +236,15 @@ contract('', async ([owner]) => {
         let gotMAX_OPEN_SOLD =  await FinNexusContributionInstance.MAX_OPEN_SOLD();
         let gotMAX_EXCHANGE_MINT =  await FinNexusContributionInstance.MAX_EXCHANGE_MINT();
 
-        console.log(colors.green('gotMAX_OPEN_SOLD: ',gotMAX_OPEN_SOLD,MAX_OPEN_SOLD));
+        console.log(colors.green('gotMAX_OPEN_SOLD: ',gotMAX_OPEN_SOLD,MAX_OPEN_SOLD_PHASE2));
 
-        console.log(colors.green('gotMAX_EXCHANGE_MINT: ',gotMAX_EXCHANGE_MINT,MAX_EXCHANGE_MINT));
+        console.log(colors.green('gotMAX_EXCHANGE_MINT: ',gotMAX_EXCHANGE_MINT,MAX_EXCHANGE_MINT_PHASE2));
 
-        ret = await CFuncTokenInstance.init(PHASE2,PHASE2_ConTokenStartTime,PHASE2_ConTokenEndTime,PHASE2_CFunc2UM1SRatio);
+        let conEndTime =  await CFuncTokenInstance.conEndTime();
+
+        console.log(conEndTime.toNumber(),PHASE2_ConTokenStartTime,conEndTime.toNumber() < PHASE2_ConTokenStartTime );
+
+        ret = await CFuncTokenInstance.init(PHASE2,PHASE2_ConTokenStartTime,PHASE2_ConTokenEndTime,PHASE2_CFunc2UM1SRatio,{from:owner});
         //console.log(ret)
 
         let gotConStartTime =  await CFuncTokenInstance.conStartTime();
@@ -249,12 +255,11 @@ contract('', async ([owner]) => {
         assert.equal(gotConEndTime,parseInt(PHASE2_ConTokenEndTime));
         assert.equal(gotConRatio,PHASE2_CFunc2UM1SRatio);
 
-        assert.equal(gotMAX_EXCHANGE_MINT.toNumber(),MAX_EXCHANGE_MINT.toNumber());
-        assert.equal(gotMAX_OPEN_SOLD.toNumber(),MAX_OPEN_SOLD.toNumber());
-
+        assert.equal(gotMAX_EXCHANGE_MINT.toNumber(),MAX_EXCHANGE_MINT_PHASE2.toNumber());
+        assert.equal(gotMAX_OPEN_SOLD.toNumber(),MAX_OPEN_SOLD_PHASE2.toNumber());
 
         assert.web3Event(ret, {
-            event: 'FirstPhaseParameters',
+            event: 'SecondPhaseParameters',
             args: {
                 startTime: parseInt(PHASE2_ConTokenStartTime),
                 endTime: parseInt(PHASE2_ConTokenEndTime),
@@ -265,8 +270,9 @@ contract('', async ([owner]) => {
     })
 
 
-
     it('[30000600] user using fallback to buy coin with wan ,should success ', async () => {
+
+        wait(function(){return Date.now() / 1000 > PHASE2_StartTime});
 
         var preTokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
 

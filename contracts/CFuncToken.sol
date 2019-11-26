@@ -126,21 +126,25 @@ contract CFuncToken is StandardToken {
        require(_conRatio > 0);
 
        conStartTime = _conStartTime;
-       conEndTime = _conEndTime;
        conRatio = _conRatio;
 
        if (_phase == 1) {
+           conEndTime = _conEndTime;
            emit FirstPhaseParameters(_conStartTime,_conEndTime,_conRatio);
        } else {
           //convert start time for phase 2 must be later than the convert end time for phase 1
+
           require(_conStartTime > conEndTime);
+
+          conEndTime = _conEndTime;
+
           //record the data for 1st stage
           firstPhaseCfunc2UM1S = totalCfunc2UM1S;
           totalCfunc2UM1S = 0;
 
           firstPhaseTotalSupply = totalSupply;
 
-          emit FirstPhaseParameters(_conStartTime,_conEndTime,_conRatio);
+          emit SecondPhaseParameters(_conStartTime,_conEndTime,_conRatio);
 
        }
 
