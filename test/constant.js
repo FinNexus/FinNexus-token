@@ -59,11 +59,15 @@ global.ether = new BigNumber(Math.pow(10, 18));
 
 global.GasPrice = 180000000000
 
+
 let MAX_OPEN_SOLD_1 =  new BigNumber(FIRST_OPEN_SALE_AMOUNT).mul(new BigNumber(PHASE1_WanRatioOfSold));
-
 global.MAX_OPEN_SOLD = MAX_OPEN_SOLD_1.mul(ether).div(new BigNumber(DIVIDER));
-
 global.MAX_EXCHANGE_MINT =  new BigNumber(FIRST_OPEN_SALE_AMOUNT).mul(ether).sub(new BigNumber(MAX_OPEN_SOLD));
+
+
+let MAX_OPEN_SOLD_2 =  new BigNumber(SECOND_OPEN_SALE_AMOUNT).mul(new BigNumber(PHASE2_WanRatioOfSold));
+global.MAX_OPEN_SOLD_PHASE2 = MAX_OPEN_SOLD_2.mul(ether).div(new BigNumber(DIVIDER));
+global.MAX_EXCHANGE_MINT_PHASE2 =  new BigNumber(SECOND_OPEN_SALE_AMOUNT).mul(ether).sub(new BigNumber(MAX_OPEN_SOLD_PHASE2));
 
 global.sleep = function sleep(numberMillis) {
     var now = new Date();

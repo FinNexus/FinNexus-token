@@ -199,12 +199,6 @@ contract CFuncToken is StandardToken {
 
     }
 
-
-
-
-
-
-
     /**
      * EXTERNAL FUNCTION
      *

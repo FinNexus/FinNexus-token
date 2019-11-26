@@ -22,7 +22,7 @@ let FinNexusContributionInstance,
 contract('', async ([owner]) => {
 
 
-  it('[90000000] Deploy contracts', async () => {
+  it('[30000000] Deploy contracts', async () => {
 
     owner = OWNER_ADDRESS;
     // unlock accounts
@@ -55,7 +55,7 @@ contract('', async ([owner]) => {
   })
 
 
-  it('[90000010] initialize contract should success', async () => {
+  it('[30000100] initialize contract should success', async () => {
 
     PHASE1_StartTime = Date.now()/1000;
     PHASE1_EndTime = PHASE1_StartTime + 2*TIME_INTERVAL;
@@ -132,7 +132,7 @@ contract('', async ([owner]) => {
 
 
 
-  it('[90000880] mint Cfunc for exchange,should success ', async () => {
+  it('[30000200] mint Cfunc for exchange,should success ', async () => {
 
         var preTokens = await CFuncTokenInstance.balanceOf(EXCHANGE1_ADDRESS);
 
@@ -150,7 +150,7 @@ contract('', async ([owner]) => {
 
 
 
-  it('[90008900] user using normal func to buy coin with wan ,should success ', async () => {
+  it('[30000300] user using normal func to buy coin with wan ,should success ', async () => {
 
         var preTokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
 
@@ -178,7 +178,7 @@ contract('', async ([owner]) => {
    })
 
 
-    it('[90008910] user convert cfunc to UM1S,should success ', async () => {
+    it('[3000400] user convert cfunc to UM1S,should success ', async () => {
         //user1's token from  [90008900]
         var pretUM1SToken =  await UM1SInstance.balanceOf(USER1_ADDRESS)
 
@@ -200,34 +200,100 @@ contract('', async ([owner]) => {
     })
 
 
-    it('[90009000] user using fallback to buy coin with wan ,should success ', async () => {
+    it('[30000500] initialize contract for phase2 should success', async () => {
 
-            var preTokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
+        PHASE2_StartTime = PHASE1_ConTokenEndTime + 10;
+        PHASE2_EndTime = PHASE2_StartTime + 2*TIME_INTERVAL;
 
-            var preBalance = await web3.eth.getBalance(WALLET_ADDRESS);
+        PHASE2_ConTokenStartTime = PHASE1_StartTime;
+        PHASE2_ConTokenEndTime = PHASE1_StartTime + 2*TIME_INTERVAL + 10;
 
-            txhash = await web3.eth.sendTransaction({from:USER1_ADDRESS,
-                                            to:FinNexusContributionInstanceAddress,
-                                            value:web3.toWei(WAN_CONTRIBUTE_AMOUNT),
-                                            });
+        wait(function(){return Date.now() / 1000 > PHASE1_EndTime});
 
-            wait(function(){return web3.eth.getTransaction(txhash).blockNumber != null;});
+        console.log(colors.green('Phase2 start time: ',PHASE2_ConTokenEndTime));
 
-            expectTokens = new BigNumber(WAN_CONTRIBUTE_AMOUNT).mul(ether).mul(PHASE1_Wan2CfuncRate).div(DIVIDER);
-
-            gotTokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
-
-            console.log("fallback got tokens=",gotTokens.toNumber());
-
-            assert.equal(gotTokens.sub(preTokens).toNumber(), expectTokens.toNumber());
-
-            var afterBalance = await web3.eth.getBalance(WALLET_ADDRESS);
-            assert.equal(afterBalance - preBalance,web3.toWei(WAN_CONTRIBUTE_AMOUNT));
-
-     })
+        ret = await FinNexusContributionInstance.init(PHASE2,
+            PHASE2_WanRatioOfSold,
+            PHASE2_StartTime,
+            PHASE2_EndTime,
+            PHASE2_Wan2CfuncRate,{from:owner});
 
 
-    it('[90009010] user1 transfer cfunc to user2,should success ', async () => {
+        let gotPhase2 =  await FinNexusContributionInstance.CURRENT_PHASE();
+        let gotStartTime =  await FinNexusContributionInstance.startTime();
+        let gotEndTime =  await FinNexusContributionInstance.endTime();
+        let gotWAN_CFUNC_RATE =  await FinNexusContributionInstance.WAN_CFUNC_RATE();
+        let initialized = await FinNexusContributionInstance.isInitialized();
+
+        assert.equal(gotPhase2,PHASE2);
+        assert.equal(gotStartTime,parseInt(PHASE2_StartTime));
+        assert.equal(gotEndTime,parseInt(PHASE2_EndTime));
+        assert.equal(gotWAN_CFUNC_RATE,PHASE2_Wan2CfuncRate);
+        assert.equal(initialized,true);
+
+        let gotMAX_OPEN_SOLD =  await FinNexusContributionInstance.MAX_OPEN_SOLD();
+        let gotMAX_EXCHANGE_MINT =  await FinNexusContributionInstance.MAX_EXCHANGE_MINT();
+
+        console.log(colors.green('gotMAX_OPEN_SOLD: ',gotMAX_OPEN_SOLD,MAX_OPEN_SOLD));
+
+        console.log(colors.green('gotMAX_EXCHANGE_MINT: ',gotMAX_EXCHANGE_MINT,MAX_EXCHANGE_MINT));
+
+        ret = await CFuncTokenInstance.init(PHASE2,PHASE2_ConTokenStartTime,PHASE2_ConTokenEndTime,PHASE2_CFunc2UM1SRatio);
+        //console.log(ret)
+
+        let gotConStartTime =  await CFuncTokenInstance.conStartTime();
+        let gotConEndTime =  await CFuncTokenInstance.conEndTime();
+        let gotConRatio =  await CFuncTokenInstance.conRatio();
+
+        assert.equal(gotConStartTime,parseInt(PHASE2_ConTokenStartTime));
+        assert.equal(gotConEndTime,parseInt(PHASE2_ConTokenEndTime));
+        assert.equal(gotConRatio,PHASE2_CFunc2UM1SRatio);
+
+        assert.equal(gotMAX_EXCHANGE_MINT.toNumber(),MAX_EXCHANGE_MINT.toNumber());
+        assert.equal(gotMAX_OPEN_SOLD.toNumber(),MAX_OPEN_SOLD.toNumber());
+
+
+        assert.web3Event(ret, {
+            event: 'FirstPhaseParameters',
+            args: {
+                startTime: parseInt(PHASE2_ConTokenStartTime),
+                endTime: parseInt(PHASE2_ConTokenEndTime),
+                conRatio: PHASE2_CFunc2UM1SRatio
+            }
+        })  ;
+
+    })
+
+
+
+    it('[30000600] user using fallback to buy coin with wan ,should success ', async () => {
+
+        var preTokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
+
+        var preBalance = await web3.eth.getBalance(WALLET_ADDRESS);
+
+        txhash = await web3.eth.sendTransaction({from:USER1_ADDRESS,
+            to:FinNexusContributionInstanceAddress,
+            value:web3.toWei(WAN_CONTRIBUTE_AMOUNT),
+        });
+
+        wait(function(){return web3.eth.getTransaction(txhash).blockNumber != null;});
+
+        expectTokens = new BigNumber(WAN_CONTRIBUTE_AMOUNT).mul(ether).mul(PHASE1_Wan2CfuncRate).div(DIVIDER);
+
+        gotTokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
+
+        console.log("fallback got tokens=",gotTokens.toNumber());
+
+        assert.equal(gotTokens.sub(preTokens).toNumber(), expectTokens.toNumber());
+
+        var afterBalance = await web3.eth.getBalance(WALLET_ADDRESS);
+        assert.equal(afterBalance - preBalance,web3.toWei(WAN_CONTRIBUTE_AMOUNT));
+
+    })
+
+
+    it('[3000700] user1 transfer cfunc to user2,should success ', async () => {
 
 
         var cfuncTokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
@@ -249,7 +315,7 @@ contract('', async ([owner]) => {
     })
 
 
-    it('[90009020] user1 transfer UM1S to user2,should success ', async () => {
+    it('[3000800] user1 transfer UM1S to user2,should success ', async () => {
 
 
         var user1UM1STokens = await UM1SInstance.balanceOf(USER1_ADDRESS);

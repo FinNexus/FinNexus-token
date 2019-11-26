@@ -99,8 +99,9 @@ contract FinNexusContribution is Owned {
      * EVENTS
      */
 
-    event FirstPhaseTime(uint indexed startTime,uint indexed endTime);
-    event SecondPhaseTime(uint indexed startTime,uint indexed endTime);
+    event FirstPhaseTime(uint indexed startTime,uint indexed endTime,uint indexed wanRatioOfSold);
+    event SecondPhaseTime(uint indexed startTime,uint indexed endTime,uint indexed wanRatioOfSold);
+
     event NewSale(address indexed destAddress, uint indexed wanCost, uint indexed gotTokens);
     event MintExchangeSale(address indexed exchangeAddr, uint indexed amount);
 
@@ -213,7 +214,7 @@ contract FinNexusContribution is Owned {
             MAX_OPEN_SOLD = FIRST_OPEN_SALE_AMOUNT.mul(_wanRatioOfSold).div(DIVISOR);
             MAX_EXCHANGE_MINT = FIRST_OPEN_SALE_AMOUNT.sub(MAX_OPEN_SOLD);
 
-            emit FirstPhaseTime(_startTime,_endTime);
+            emit FirstPhaseTime(_startTime,_endTime,_wanRatioOfSold);
 
         } else {
 
@@ -229,7 +230,7 @@ contract FinNexusContribution is Owned {
 
             CURRENT_PHASE = 2;
 
-            emit SecondPhaseTime(_startTime,_endTime);
+            emit SecondPhaseTime(_startTime,_endTime,_wanRatioOfSold);
         }
 
         isInitialized = true;
