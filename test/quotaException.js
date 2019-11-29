@@ -1,6 +1,10 @@
 require('truffle-test-utils').init()
 require('./constant.js')
 
+global.FinNexusSol = artifacts.require('../test/helper/FinNexusContributionMock.sol')
+global.FinNexusABI = artifacts.require('./FinNexusContribution.sol').abi
+global.FinNexus = web3.eth.contract(FinNexusABI)
+
 ////////////////////////////////////////////////////////////////////////////////////
 
 let FinNexusContributionInstance,
@@ -22,7 +26,7 @@ let FinNexusContributionInstance,
 contract('', async ([owner]) => {
 
 
-    it('[20000000] Deploy contracts', async () => {
+    it('[40000000] Deploy contracts', async () => {
 
         owner = OWNER_ADDRESS;
         // unlock accounts
@@ -55,7 +59,7 @@ contract('', async ([owner]) => {
     })
 
 
-    it('[20000010] initialize contract should success', async () => {
+    it('[40000010] initialize contract should success', async () => {
 
         PHASE1_StartTime = Date.now() / 1000 + 60;
         PHASE1_EndTime = PHASE1_StartTime + 20;
@@ -130,7 +134,7 @@ contract('', async ([owner]) => {
 
     })
 
-
+/*
 
     it('[20000100] buy token with api function in contract,should fail because not reach start time', async () => {
 
@@ -238,5 +242,5 @@ contract('', async ([owner]) => {
 
         assert.notEqual(retError, undefined, 'buy token fail with fallback,error must be thrown');
     })
-
+*/
 })
