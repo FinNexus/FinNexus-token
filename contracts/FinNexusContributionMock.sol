@@ -1,10 +1,10 @@
 pragma solidity ^0.4.24;
 
-import '../../contracts/FinNexusContribution.sol';
+import './FinNexusContribution.sol';
 
 contract FinNexusContributionMock is FinNexusContribution{
 
-    function FinNexusContributionMock {
+    function FinNexusContributionMock(){
 
     }
 

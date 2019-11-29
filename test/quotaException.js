@@ -1,8 +1,8 @@
 require('truffle-test-utils').init()
 require('./constant.js')
 
-global.FinNexusSol = artifacts.require('../test/helper/FinNexusContributionMock.sol')
-global.FinNexusABI = artifacts.require('./FinNexusContribution.sol').abi
+global.FinNexusSol = artifacts.require('./FinNexusContributionMock.sol')
+global.FinNexusABI = artifacts.require('./FinNexusContributionMock.sol').abi
 global.FinNexus = web3.eth.contract(FinNexusABI)
 
 ////////////////////////////////////////////////////////////////////////////////////
