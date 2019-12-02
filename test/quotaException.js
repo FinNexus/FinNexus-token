@@ -145,11 +145,6 @@ contract('', async ([owner]) => {
         assert.equal(gotMAX_OPEN_SOLD.toNumber(), web3.toWei(WAN_CONTRIBUTE_AMOUNT));
 
 
-
-
-
-
-
     })
 
 
@@ -184,75 +179,4 @@ contract('', async ([owner]) => {
 
     })
 
-/*
-    it('[20000200] user using fallback to buy coin with wan,should fail because not reach start time', async () => {
-        let retError;
-
-        try {
-
-            var preTokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
-
-            var preBalance = await web3.eth.getBalance(WALLET_ADDRESS);
-
-            txhash = await web3.eth.sendTransaction({from:USER1_ADDRESS,
-                to:FinNexusContributionInstanceAddress,
-                value:web3.toWei(WAN_CONTRIBUTE_AMOUNT),
-            });
-
-            wait(function(){return web3.eth.getTransaction(txhash).blockNumber != null;});
-
-            expectTokens = new BigNumber(WAN_CONTRIBUTE_AMOUNT).mul(ether).mul(PHASE1_Wan2CfuncRate).div(DIVIDER);
-
-            gotTokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
-
-            console.log("fallback got tokens=",gotTokens.toNumber());
-
-            assert.equal(gotTokens.sub(preTokens).toNumber(), expectTokens.toNumber());
-
-            var afterBalance = await web3.eth.getBalance(WALLET_ADDRESS);
-            assert.equal(afterBalance - preBalance,web3.toWei(WAN_CONTRIBUTE_AMOUNT));
-        } catch (err) {
-            retError = err;
-        }
-
-        assert.notEqual(retError, undefined, 'buy token fail with fallback,error must be thrown');
-    })
-
-
-
-
-    it('[20000600] user using fallback to buy coin with wan,should fail because passed time', async () => {
-        let retError;
-        wait(function(){return Date.now() / 1000 > PHASE1_EndTime});
-
-        try {
-
-            var preTokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
-
-            var preBalance = await web3.eth.getBalance(WALLET_ADDRESS);
-
-            txhash = await web3.eth.sendTransaction({from:USER1_ADDRESS,
-                to:FinNexusContributionInstanceAddress,
-                value:web3.toWei(WAN_CONTRIBUTE_AMOUNT),
-            });
-
-            wait(function(){return web3.eth.getTransaction(txhash).blockNumber != null;});
-
-            expectTokens = new BigNumber(WAN_CONTRIBUTE_AMOUNT).mul(ether).mul(PHASE1_Wan2CfuncRate).div(DIVIDER);
-
-            gotTokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
-
-            console.log("fallback got tokens=",gotTokens.toNumber());
-
-            assert.equal(gotTokens.sub(preTokens).toNumber(), expectTokens.toNumber());
-
-            var afterBalance = await web3.eth.getBalance(WALLET_ADDRESS);
-            assert.equal(afterBalance - preBalance,web3.toWei(WAN_CONTRIBUTE_AMOUNT));
-        } catch (err) {
-            retError = err;
-        }
-
-        assert.notEqual(retError, undefined, 'buy token fail with fallback,error must be thrown');
-    })
-*/
 })
