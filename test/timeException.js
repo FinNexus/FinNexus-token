@@ -5,8 +5,8 @@ require('./constant.js')
 
 let FinNexusContributionInstance,
     FinNexusContributionInstanceAddress,
-    CFuncTokenInstance,
-    CFuncTokenInstanceAddress,
+    CfncTokenInstance,
+    CfncTokenInstanceAddress,
     UM1SInstance,
     UM1SInstanceAddress,
     PHASE1_StartTime,
@@ -40,12 +40,12 @@ contract('', async ([owner]) => {
         console.log(colors.green('[INFO] FinNexusContributionInstance address:', FinNexusContributionInstanceAddress));
 
 
-        CFuncTokenInstance = await CFuncTokenSol.new(FinNexusContributionInstanceAddress, owner, {from: owner});
-        CFuncTokenInstanceAddress = CFuncTokenInstance.address
-        console.log(colors.green('[INFO] CFuncTokenInstance address:', CFuncTokenInstanceAddress));
+        CfncTokenInstance = await CfncTokenSol.new(FinNexusContributionInstanceAddress, owner, {from: owner});
+        CfncTokenInstanceAddress = CfncTokenInstance.address
+        console.log(colors.green('[INFO] CfncTokenInstance address:', CfncTokenInstanceAddress));
 
 
-        UM1SInstanceAddress = await CFuncTokenInstance.um1sToken();
+        UM1SInstanceAddress = await CfncTokenInstance.um1sToken();
         console.log(colors.green('[INFO] UM1SInstance address:', UM1SInstanceAddress));
         UM1SInstance = UM1SToken.at(UM1SInstanceAddress);
 
@@ -67,34 +67,34 @@ contract('', async ([owner]) => {
         console.log(colors.green('Phase1 start time: ', PHASE1_StartTime));
 
 
-        let ret = await FinNexusContributionInstance.initAddress(WALLET_ADDRESS, CFuncTokenInstanceAddress, {from: owner});
+        let ret = await FinNexusContributionInstance.initAddress(WALLET_ADDRESS, CfncTokenInstanceAddress, {from: owner});
 
         let gotWalletAddress = await FinNexusContributionInstance.walletAddress();
-        let tokenAddress = await FinNexusContributionInstance.cfuncTokenAddress();
+        let tokenAddress = await FinNexusContributionInstance.cfncTokenAddress();
 
         console.log(colors.green('gotWalletAddress: ', gotWalletAddress));
         console.log(colors.green('tokenAddress: ', tokenAddress));
 
         assert.equal(gotWalletAddress, WALLET_ADDRESS)
-        assert.equal(tokenAddress, CFuncTokenInstanceAddress);
+        assert.equal(tokenAddress, CfncTokenInstanceAddress);
 
         ret = await FinNexusContributionInstance.init(PHASE1,
             PHASE1_WanRatioOfSold,
             PHASE1_StartTime,
             PHASE1_EndTime,
-            PHASE1_Wan2CfuncRate, {from: owner});
+            PHASE1_Wan2CfncRate, {from: owner});
         //console.log(ret)
 
         let gotPhase1 = await FinNexusContributionInstance.CURRENT_PHASE();
         let gotStartTime = await FinNexusContributionInstance.startTime();
         let gotEndTime = await FinNexusContributionInstance.endTime();
-        let gotWAN_CFUNC_RATE = await FinNexusContributionInstance.WAN_CFUNC_RATE();
+        let gotWAN_CFNC_RATE = await FinNexusContributionInstance.WAN_CFNC_RATE();
         let initialized = await FinNexusContributionInstance.isInitialized();
 
         assert.equal(gotPhase1, PHASE1);
         assert.equal(gotStartTime, parseInt(PHASE1_StartTime));
         assert.equal(gotEndTime, parseInt(PHASE1_EndTime));
-        assert.equal(gotWAN_CFUNC_RATE, PHASE1_Wan2CfuncRate);
+        assert.equal(gotWAN_CFNC_RATE, PHASE1_Wan2CfncRate);
         assert.equal(initialized, true);
 
         let gotMAX_OPEN_SOLD = await FinNexusContributionInstance.MAX_OPEN_SOLD();
@@ -104,16 +104,16 @@ contract('', async ([owner]) => {
 
         console.log(colors.green('gotMAX_EXCHANGE_MINT: ', gotMAX_EXCHANGE_MINT, MAX_EXCHANGE_MINT));
 
-        ret = await CFuncTokenInstance.init(PHASE1, PHASE1_ConTokenStartTime, PHASE1_ConTokenEndTime, PHASE1_CFunc2UM1SRatio);
+        ret = await CfncTokenInstance.init(PHASE1, PHASE1_ConTokenStartTime, PHASE1_ConTokenEndTime, PHASE1_Cfnc2UM1SRatio);
         //console.log(ret)
 
-        let gotConStartTime = await CFuncTokenInstance.conStartTime();
-        let gotConEndTime = await CFuncTokenInstance.conEndTime();
-        let gotConRatio = await CFuncTokenInstance.conRatio();
+        let gotConStartTime = await CfncTokenInstance.conStartTime();
+        let gotConEndTime = await CfncTokenInstance.conEndTime();
+        let gotConRatio = await CfncTokenInstance.conRatio();
 
         assert.equal(gotConStartTime, parseInt(PHASE1_ConTokenStartTime));
         assert.equal(gotConEndTime, parseInt(PHASE1_ConTokenEndTime));
-        assert.equal(gotConRatio, PHASE1_CFunc2UM1SRatio);
+        assert.equal(gotConRatio, PHASE1_Cfnc2UM1SRatio);
 
         assert.equal(gotMAX_EXCHANGE_MINT.toNumber(), MAX_EXCHANGE_MINT.toNumber());
         assert.equal(gotMAX_OPEN_SOLD.toNumber(), MAX_OPEN_SOLD.toNumber());
@@ -124,7 +124,7 @@ contract('', async ([owner]) => {
             args: {
                 startTime: parseInt(PHASE1_ConTokenStartTime),
                 endTime: parseInt(PHASE1_ConTokenEndTime),
-                conRatio: PHASE1_CFunc2UM1SRatio
+                conRatio: PHASE1_Cfnc2UM1SRatio
             }
         });
 
@@ -138,20 +138,20 @@ contract('', async ([owner]) => {
 
         try {
 
-            var preTokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
+            var preTokens = await CfncTokenInstance.balanceOf(USER1_ADDRESS);
 
             var preBalance = await web3.eth.getBalance(WALLET_ADDRESS);
 
-            ret = await FinNexusContributionInstance.buyCFuncCoin(USER1_ADDRESS,
+            ret = await FinNexusContributionInstance.buyCfncCoin(USER1_ADDRESS,
                 {   from:USER1_ADDRESS,
                     value:web3.toWei(WAN_CONTRIBUTE_AMOUNT),
                     gas: 4700000,
                     gasPrice: "0x"+(GasPrice).toString(16)
                 });
 
-            expectTokens = new BigNumber(WAN_CONTRIBUTE_AMOUNT).mul(ether).mul(PHASE1_Wan2CfuncRate).div(DIVIDER);
+            expectTokens = new BigNumber(WAN_CONTRIBUTE_AMOUNT).mul(ether).mul(PHASE1_Wan2CfncRate).div(DIVIDER);
 
-            gotTokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
+            gotTokens = await CfncTokenInstance.balanceOf(USER1_ADDRESS);
 
             console.log("function got tokens=",gotTokens.toNumber());
 
@@ -174,7 +174,7 @@ contract('', async ([owner]) => {
 
         try {
 
-            var preTokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
+            var preTokens = await CfncTokenInstance.balanceOf(USER1_ADDRESS);
 
             var preBalance = await web3.eth.getBalance(WALLET_ADDRESS);
 
@@ -185,9 +185,9 @@ contract('', async ([owner]) => {
 
             wait(function(){return web3.eth.getTransaction(txhash).blockNumber != null;});
 
-            expectTokens = new BigNumber(WAN_CONTRIBUTE_AMOUNT).mul(ether).mul(PHASE1_Wan2CfuncRate).div(DIVIDER);
+            expectTokens = new BigNumber(WAN_CONTRIBUTE_AMOUNT).mul(ether).mul(PHASE1_Wan2CfncRate).div(DIVIDER);
 
-            gotTokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
+            gotTokens = await CfncTokenInstance.balanceOf(USER1_ADDRESS);
 
             console.log("fallback got tokens=",gotTokens.toNumber());
 
@@ -203,12 +203,12 @@ contract('', async ([owner]) => {
     })
 
 
-    it('[20000300] user convert cfunc to um1s,should fail because not reach start time', async () => {
+    it('[20000300] user convert cfnc to um1s,should fail because not reach start time', async () => {
         let retError;
 
         wait(function(){return Date.now() / 1000 > PHASE1_StartTime});
 
-        var preTokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
+        var preTokens = await CfncTokenInstance.balanceOf(USER1_ADDRESS);
 
         var preBalance = await web3.eth.getBalance(WALLET_ADDRESS);
 
@@ -219,9 +219,9 @@ contract('', async ([owner]) => {
 
         wait(function(){return web3.eth.getTransaction(txhash).blockNumber != null;});
 
-        expectTokens = new BigNumber(WAN_CONTRIBUTE_AMOUNT).mul(ether).mul(PHASE1_Wan2CfuncRate).div(DIVIDER);
+        expectTokens = new BigNumber(WAN_CONTRIBUTE_AMOUNT).mul(ether).mul(PHASE1_Wan2CfncRate).div(DIVIDER);
 
-        gotTokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
+        gotTokens = await CfncTokenInstance.balanceOf(USER1_ADDRESS);
 
         console.log("fallback got tokens=",gotTokens.toNumber());
 
@@ -239,11 +239,11 @@ contract('', async ([owner]) => {
 
             var pretUM1SToken =  await UM1SInstance.balanceOf(USER1_ADDRESS)
 
-            var cfuncTokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
-            var cft = new BigNumber(cfuncTokens).mul(PHASE1_CFunc2UM1SRatio).div(DIVIDER);
-            console.log('cufnc tokens=',cfuncTokens.toNumber(),"covert tokens=",cft.toNumber());
+            var cfncTokens = await CfncTokenInstance.balanceOf(USER1_ADDRESS);
+            var cft = new BigNumber(cfncTokens).mul(PHASE1_Cfnc2UM1SRatio).div(DIVIDER);
+            console.log('cufnc tokens=',cfncTokens.toNumber(),"covert tokens=",cft.toNumber());
 
-            var ret = await CFuncTokenInstance.convert2UM1S(cft.toNumber(),{from:USER1_ADDRESS});
+            var ret = await CfncTokenInstance.convert2UM1S(cft.toNumber(),{from:USER1_ADDRESS});
 
             var expectUM1S = cft.div(10);
 
@@ -260,7 +260,7 @@ contract('', async ([owner]) => {
     })
 
 
-    it('[20000400] user convert cfunc to UM1S,should fail because passed convert time', async () => {
+    it('[20000400] user convert cfnc to UM1S,should fail because passed convert time', async () => {
 
         let retError;
 
@@ -270,11 +270,11 @@ contract('', async ([owner]) => {
             //user1's token from  [90008900]
             var pretUM1SToken =  await UM1SInstance.balanceOf(USER1_ADDRESS)
 
-            var cfuncTokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
-            var cft = new BigNumber(cfuncTokens).mul(PHASE1_CFunc2UM1SRatio).div(DIVIDER);
-            console.log('cufnc tokens=',cfuncTokens.toNumber(),"covert tokens=",cft.toNumber());
+            var cfncTokens = await CfncTokenInstance.balanceOf(USER1_ADDRESS);
+            var cft = new BigNumber(cfncTokens).mul(PHASE1_Cfnc2UM1SRatio).div(DIVIDER);
+            console.log('cufnc tokens=',cfncTokens.toNumber(),"covert tokens=",cft.toNumber());
 
-            var ret = await CFuncTokenInstance.convert2UM1S(cft.toNumber(),{from:USER1_ADDRESS});
+            var ret = await CfncTokenInstance.convert2UM1S(cft.toNumber(),{from:USER1_ADDRESS});
 
             //console.log(ret);
 
@@ -301,20 +301,20 @@ contract('', async ([owner]) => {
 
         try {
 
-            var preTokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
+            var preTokens = await CfncTokenInstance.balanceOf(USER1_ADDRESS);
 
             var preBalance = await web3.eth.getBalance(WALLET_ADDRESS);
 
-            ret = await FinNexusContributionInstance.buyCFuncCoin(USER1_ADDRESS,
+            ret = await FinNexusContributionInstance.buyCfncCoin(USER1_ADDRESS,
                 {   from:USER1_ADDRESS,
                     value:web3.toWei(WAN_CONTRIBUTE_AMOUNT),
                     gas: 4700000,
                     gasPrice: "0x"+(GasPrice).toString(16)
                 });
 
-            expectTokens = new BigNumber(WAN_CONTRIBUTE_AMOUNT).mul(ether).mul(PHASE1_Wan2CfuncRate).div(DIVIDER);
+            expectTokens = new BigNumber(WAN_CONTRIBUTE_AMOUNT).mul(ether).mul(PHASE1_Wan2CfncRate).div(DIVIDER);
 
-            gotTokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
+            gotTokens = await CfncTokenInstance.balanceOf(USER1_ADDRESS);
 
             console.log("function got tokens=",gotTokens.toNumber());
 
@@ -338,7 +338,7 @@ contract('', async ([owner]) => {
 
         try {
 
-            var preTokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
+            var preTokens = await CfncTokenInstance.balanceOf(USER1_ADDRESS);
 
             var preBalance = await web3.eth.getBalance(WALLET_ADDRESS);
 
@@ -349,9 +349,9 @@ contract('', async ([owner]) => {
 
             wait(function(){return web3.eth.getTransaction(txhash).blockNumber != null;});
 
-            expectTokens = new BigNumber(WAN_CONTRIBUTE_AMOUNT).mul(ether).mul(PHASE1_Wan2CfuncRate).div(DIVIDER);
+            expectTokens = new BigNumber(WAN_CONTRIBUTE_AMOUNT).mul(ether).mul(PHASE1_Wan2CfncRate).div(DIVIDER);
 
-            gotTokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
+            gotTokens = await CfncTokenInstance.balanceOf(USER1_ADDRESS);
 
             console.log("fallback got tokens=",gotTokens.toNumber());
 

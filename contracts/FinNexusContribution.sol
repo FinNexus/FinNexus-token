@@ -25,7 +25,7 @@ import "./Owned.sol";
 /// ICO Rules according: https://www.FinNexus.org/crowdsale
 /// For more information about this token sale, please visit https://FinNexus.org
 
-contract CFuncTokenInterface {
+contract CfncTokenInterface {
     function mintToken(address _receipent, uint _amount) external;
     function conEndTime()  public view returns(uint);
 }
@@ -37,7 +37,7 @@ contract FinNexusContribution is Owned {
     /// Constant fields
 
     /// FinNexus total tokens supply
-    uint public constant CFUNC_TOTAL_SUPPLY = 500000000 ether;
+    uint public constant CFNC_TOTAL_SUPPLY = 500000000 ether;
 
     /// ----------------------------------------------------------------------------------------------------
     /// |                                                  |                    |                 |          |
@@ -57,7 +57,7 @@ contract FinNexusContribution is Owned {
     uint public constant DIVISOR = 1000;
 
     /// Exchange rates for WAN
-    uint public WAN_CFUNC_RATE ;
+    uint public WAN_CFNC_RATE ;
 
     /// Addresses of Patrons
     address public constant DEV_TEAM_HOLDER = 0xf851b2edae9d24876ed7645062331622e4f18a05;
@@ -90,7 +90,7 @@ contract FinNexusContribution is Owned {
     bool public halted;
 
     /// ERC20 compilant FinNexus token contact instance
-    address public cfuncTokenAddress;
+    address public cfncTokenAddress;
 
     ///the indicator for initialized status
     bool public isInitialized = false;
@@ -158,19 +158,19 @@ contract FinNexusContribution is Owned {
      * public function
      *
      * @dev change wallet address for recieving wan
-     * @param _walletAddress the address for recieving cfunc tokens
-     * @param _cfuncTokenAddress the address for cfunc token
+     * @param _walletAddress the address for recieving cfnc tokens
+     * @param _cfncTokenAddress the address for cfnc token
      *
      */
-    function initAddress(address _walletAddress,address _cfuncTokenAddress)
+    function initAddress(address _walletAddress,address _cfncTokenAddress)
         public
         onlyOwner
     {
         require(_walletAddress != 0x0);
-        require(_cfuncTokenAddress != 0x0);
+        require(_cfncTokenAddress != 0x0);
 
         walletAddress = _walletAddress;
-        cfuncTokenAddress = _cfuncTokenAddress;
+        cfncTokenAddress = _cfncTokenAddress;
     }
 
 
@@ -182,34 +182,34 @@ contract FinNexusContribution is Owned {
      * @param _wanRatioOfSold   the ratio for open sale in different phase
      * @param _startTime    start time for open sale
      * @param _endTime  end time for open sale
-     * @param _Wan2CfuncRate the change rate from wan to cfunc
+     * @param _Wan2CfncRate the change rate from wan to cfnc
      *
      */
     function init(  uint _phase,
                     uint _wanRatioOfSold,
                     uint _startTime,
                     uint _endTime,
-                    uint _Wan2CfuncRate
+                    uint _Wan2CfncRate
                     )
         public
         onlyOwner
     {
-        require(cfuncTokenAddress != 0x0 );
+        require(cfncTokenAddress != 0x0 );
         require(_startTime > 0);
         require(_endTime > _startTime);
-        require(_Wan2CfuncRate > 0);
+        require(_Wan2CfncRate > 0);
 
         startTime = _startTime;
         endTime = _endTime;
-        WAN_CFUNC_RATE =  _Wan2CfuncRate;
+        WAN_CFNC_RATE =  _Wan2CfncRate;
 
         if (_phase == 1) {
             /// Reserve tokens according FinNexus ICO rules
-        	uint stakeMultiplier = CFUNC_TOTAL_SUPPLY.div(DIVISOR);
+        	uint stakeMultiplier = CFNC_TOTAL_SUPPLY.div(DIVISOR);
     		/// mint tokens for dirrent holder
-            CFuncTokenInterface(cfuncTokenAddress).mintToken(DEV_TEAM_HOLDER, DEV_TEAM_STAKE.mul(stakeMultiplier));
-            CFuncTokenInterface(cfuncTokenAddress).mintToken(FOUNDATION_HOLDER, FOUNDATION_STAKE.mul(stakeMultiplier));
-            CFuncTokenInterface(cfuncTokenAddress).mintToken(DYNAMIC_HOLDER, DYNAMIC_STAKE.mul(stakeMultiplier));
+            CFncTokenInterface(cfncTokenAddress).mintToken(DEV_TEAM_HOLDER, DEV_TEAM_STAKE.mul(stakeMultiplier));
+            CFncTokenInterface(cfncTokenAddress).mintToken(FOUNDATION_HOLDER, FOUNDATION_STAKE.mul(stakeMultiplier));
+            CFncTokenInterface(cfncTokenAddress).mintToken(DYNAMIC_HOLDER, DYNAMIC_STAKE.mul(stakeMultiplier));
 
             MAX_OPEN_SOLD = FIRST_OPEN_SALE_AMOUNT.mul(_wanRatioOfSold).div(DIVISOR);
             MAX_EXCHANGE_MINT = FIRST_OPEN_SALE_AMOUNT.sub(MAX_OPEN_SOLD);
@@ -219,7 +219,7 @@ contract FinNexusContribution is Owned {
         } else {
 
             require(_phase == 2);
-            require(_startTime > CFuncTokenInterface(cfuncTokenAddress).conEndTime());
+            require(_startTime > CFncTokenInterface(cfncTokenAddress).conEndTime());
 
             MAX_OPEN_SOLD = SECOND_OPEN_SALE_AMOUNT.mul(_wanRatioOfSold).div(DIVISOR);
             MAX_EXCHANGE_MINT = SECOND_OPEN_SALE_AMOUNT.sub(MAX_OPEN_SOLD);
@@ -239,7 +239,7 @@ contract FinNexusContribution is Owned {
     /**
      * public function
      *
-     * @dev minting cfunc tokens for exchange
+     * @dev minting cfnc tokens for exchange
      * @param _exchangeAddr the exchange address for recieving tokens
      * @param _amount the token amount for exchange
      *
@@ -253,10 +253,10 @@ contract FinNexusContribution is Owned {
         uint availToken = MAX_EXCHANGE_MINT.sub(mintExchangeTokens);
         if (availToken >= _amount) {
             mintExchangeTokens = mintExchangeTokens.add(_amount);
-            CFuncTokenInterface(cfuncTokenAddress).mintToken(_exchangeAddr, _amount);
+            CFncTokenInterface(cfncTokenAddress).mintToken(_exchangeAddr, _amount);
             emit MintExchangeSale(_exchangeAddr,_amount);
         } else {
-            CFuncTokenInterface(cfuncTokenAddress).mintToken(_exchangeAddr,availToken);
+            CFncTokenInterface(cfncTokenAddress).mintToken(_exchangeAddr,availToken);
             emit MintExchangeSale(_exchangeAddr,availToken);
         }
     }
@@ -268,17 +268,17 @@ contract FinNexusContribution is Owned {
      * @dev If anybody sends Wan directly to this  contract, consider he is getting wan token
      */
     function () public payable {
-    	buyCFuncCoin(msg.sender);
+    	buyCfncCoin(msg.sender);
     }
 
     /**
      * public function
      *
-     * @dev minting cfunc tokens for exchange
-     * @param _receipient the address for recieving cfunc tokens
+     * @dev minting cfnc tokens for exchange
+     * @param _receipient the address for recieving cfnc tokens
      *
      */
-    function buyCFuncCoin(address _receipient)
+    function buyCFncCoin(address _receipient)
         public
         payable
         notHalted
@@ -317,13 +317,13 @@ contract FinNexusContribution is Owned {
     /**
      * public function
      *
-     * @dev set rate from wan to cfunc
-     * @param _Wan2CfuncRate the exchange rate
+     * @dev set rate from wan to cfnc
+     * @param _Wan2CfncRate the exchange rate
      *
      */
-    function setExchangeRate(uint _Wan2CfuncRate) public onlyOwner{
-        require(_Wan2CfuncRate != 0);
-        WAN_CFUNC_RATE =  _Wan2CfuncRate;
+    function setExchangeRate(uint _Wan2CfncRate) public onlyOwner{
+        require(_Wan2CfncRate != 0);
+        WAN_CFNC_RATE =  _Wan2CfncRate;
     }
 
     /**
@@ -359,7 +359,7 @@ contract FinNexusContribution is Owned {
 
         if(toFund > 0) {
 
-            CFuncTokenInterface(cfuncTokenAddress).mintToken(receipient, tokenCollect);
+            CFncTokenInterface(cfncTokenAddress).mintToken(receipient, tokenCollect);
             openSoldTokens = openSoldTokens.add(tokenCollect);
 
             //transfer wan to specified address
@@ -377,12 +377,12 @@ contract FinNexusContribution is Owned {
     /// @dev Utility function for calculate available tokens and cost wans
     function costAndBuyTokens(uint availableToken) constant internal returns (uint costValue, uint getTokens){
 
-    	getTokens = WAN_CFUNC_RATE.mul(msg.value).div(DIVISOR);
+    	getTokens = WAN_CFNC_RATE.mul(msg.value).div(DIVISOR);
 
     	if(availableToken >= getTokens){
     		costValue = msg.value;
     	} else {
-    		costValue = availableToken.mul(DIVISOR).div(WAN_CFUNC_RATE);
+    		costValue = availableToken.mul(DIVISOR).div(WAN_CFNC_RATE);
     		getTokens = availableToken;
     	}
     }

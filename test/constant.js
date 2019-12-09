@@ -8,9 +8,9 @@ global.FinNexusSol = artifacts.require('./FinNexusContribution.sol')
 global.FinNexusABI = artifacts.require('./FinNexusContribution.sol').abi
 global.FinNexus = web3.eth.contract(FinNexusABI)
 
-global.CFuncTokenSol = artifacts.require('./CFuncToken.sol')
-global.CFuncTokenABI = artifacts.require('./CFuncToken.sol').abi
-global.CFuncToken = web3.eth.contract(CFuncTokenABI)
+global.CfncTokenSol = artifacts.require('./CfncToken.sol')
+global.CfncTokenABI = artifacts.require('./CfncToken.sol').abi
+global.CfncToken = web3.eth.contract(CfncTokenABI)
 
 global.UM1SABI = artifacts.require('./UM1SToken.sol').abi
 global.UM1SToken = web3.eth.contract(UM1SABI)
@@ -19,6 +19,8 @@ global.UM1SToken = web3.eth.contract(UM1SABI)
 global.OWNER_ADDRESS = '0xf7a2681f8cf9661b6877de86034166422cd8c308'
 // ERC20 compliant token addresses
 global.WALLET_ADDRESS = '0xf851b2edae9d24876ed7645062331622e4f18a05'
+
+
 global.DEV_TEAM_HOLDER = '0x8ce3708fdbe05a75135e5923e8acc36d22d18033'
 global.FOUNDATION_HOLDER = '0x414810cd259e89a63c6fb10326cfa00952fb4785'
 global.DYNAMIC_HOLDER = '0xb957c97b508a10851724d7b68698f88803338ced'
@@ -41,13 +43,13 @@ global.SECOND_OPEN_SALE_AMOUNT = 70000000 ;
 
 global.PHASE1 = 1
 global.PHASE1_WanRatioOfSold = 100 //10%,  it is mul 1000
-global.PHASE1_Wan2CfuncRate = 2100 //2.1,  it is mul 1000
-global.PHASE1_CFunc2UM1SRatio = 800 //80%,  it is mul 1000
+global.PHASE1_Wan2CfncRate = 2100 //2.1,  it is mul 1000
+global.PHASE1_Cfnc2UM1SRatio = 800 //80%,  it is mul 1000
 
 global.PHASE2 = 2
 global.PHASE2_WanRatioOfSold = 100 //10%,  it is mul 1000
-global.PHASE2_Wan2CfuncRate = 2100 //2.1,  it is mul 1000
-global.PHASE2_CFunc2UM1SRatio = 800 //80%,  it is mul 1000
+global.PHASE2_Wan2CfncRate = 2100 //2.1,  it is mul 1000
+global.PHASE2_Cfnc2UM1SRatio = 800 //80%,  it is mul 1000
 
 global.DIVIDER = 1000
 

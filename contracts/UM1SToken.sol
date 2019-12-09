@@ -40,7 +40,7 @@ contract UM1SToken is StandardToken {
     uint public constant MAX_TOTAL_TOKEN_AMOUNT = 400000000 ether;
 
     uint public constant DIVISOR = 1000;
-    uint public constant RATE_CFUNC_BT = 100;//10:1
+    uint public constant RATE_CFNC_BT = 100;//10:1
 
 
     /*
@@ -72,11 +72,11 @@ contract UM1SToken is StandardToken {
         external
         onlyMinter
     {
-       //time check will do in minter cfunc token
+       //time check will do in minter cfnc token
         require(_receipent != 0x0);
         require(_amount > 0);
 
-        uint conAmount = _amount.mul(RATE_CFUNC_BT).div(DIVISOR);        
+        uint conAmount = _amount.mul(RATE_CFNC_BT).div(DIVISOR);
         totalSupply = totalSupply.add(conAmount);
 
         assert(totalSupply <= MAX_TOTAL_TOKEN_AMOUNT);

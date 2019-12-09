@@ -9,8 +9,8 @@ FinNexusMock = web3.eth.contract(FinNexusABI)
 
 let FinNexusContributionInstance,
     FinNexusContributionInstanceAddress,
-    CFuncTokenInstance,
-    CFuncTokenInstanceAddress,
+    CfncTokenInstance,
+    CfncTokenInstanceAddress,
     UM1SInstance,
     UM1SInstanceAddress,
     PHASE1_StartTime,
@@ -44,12 +44,12 @@ contract('', async ([owner]) => {
         console.log(colors.green('[INFO] FinNexusContributionInstance address:', FinNexusContributionInstanceAddress));
 
 
-        CFuncTokenInstance = await CFuncTokenSol.new(FinNexusContributionInstanceAddress, owner, {from: owner});
-        CFuncTokenInstanceAddress = CFuncTokenInstance.address
-        console.log(colors.green('[INFO] CFuncTokenInstance address:', CFuncTokenInstanceAddress));
+        CfncTokenInstance = await CfncTokenSol.new(FinNexusContributionInstanceAddress, owner, {from: owner});
+        CfncTokenInstanceAddress = CfncTokenInstance.address
+        console.log(colors.green('[INFO] CfncTokenInstance address:', CfncTokenInstanceAddress));
 
 
-        UM1SInstanceAddress = await CFuncTokenInstance.um1sToken();
+        UM1SInstanceAddress = await CfncTokenInstance.um1sToken();
         console.log(colors.green('[INFO] UM1SInstance address:', UM1SInstanceAddress));
         UM1SInstance = UM1SToken.at(UM1SInstanceAddress);
 
@@ -67,53 +67,53 @@ contract('', async ([owner]) => {
         PHASE1_ConTokenStartTime = PHASE1_StartTime;
         PHASE1_ConTokenEndTime = PHASE1_StartTime + 2*TIME_INTERVAL;
 
-        PHASE1_Wan2CfuncRate = 2000;//one wan will get 2 cfunc
+        PHASE1_Wan2CfncRate = 2000;//one wan will get 2 cfnc
         WAN_CONTRIBUTE_AMOUNT = 10;
         MAX_EXCHANGE_MINT = 10;
 
         console.log(colors.green('Phase1 start time: ', PHASE1_StartTime));
 
 
-        let ret = await FinNexusContributionInstance.initAddress(WALLET_ADDRESS, CFuncTokenInstanceAddress, {from: owner});
+        let ret = await FinNexusContributionInstance.initAddress(WALLET_ADDRESS, CfncTokenInstanceAddress, {from: owner});
 
         let gotWalletAddress = await FinNexusContributionInstance.walletAddress();
-        let tokenAddress = await FinNexusContributionInstance.cfuncTokenAddress();
+        let tokenAddress = await FinNexusContributionInstance.cfncTokenAddress();
 
         console.log(colors.green('gotWalletAddress: ', gotWalletAddress));
         console.log(colors.green('tokenAddress: ', tokenAddress));
 
         assert.equal(gotWalletAddress, WALLET_ADDRESS)
-        assert.equal(tokenAddress, CFuncTokenInstanceAddress);
+        assert.equal(tokenAddress, CfncTokenInstanceAddress);
 
         ret = await FinNexusContributionInstance.init(PHASE1,
             PHASE1_WanRatioOfSold,
             PHASE1_StartTime,
             PHASE1_EndTime,
-            PHASE1_Wan2CfuncRate, {from: owner});
+            PHASE1_Wan2CfncRate, {from: owner});
         //console.log(ret)
 
         let gotPhase1 = await FinNexusContributionInstance.CURRENT_PHASE();
         let gotStartTime = await FinNexusContributionInstance.startTime();
         let gotEndTime = await FinNexusContributionInstance.endTime();
-        let gotWAN_CFUNC_RATE = await FinNexusContributionInstance.WAN_CFUNC_RATE();
+        let gotWAN_CFNC_RATE = await FinNexusContributionInstance.WAN_CFNC_RATE();
         let initialized = await FinNexusContributionInstance.isInitialized();
 
         assert.equal(gotPhase1, PHASE1);
         assert.equal(gotStartTime, parseInt(PHASE1_StartTime));
         assert.equal(gotEndTime, parseInt(PHASE1_EndTime));
-        assert.equal(gotWAN_CFUNC_RATE, PHASE1_Wan2CfuncRate);
+        assert.equal(gotWAN_CFNC_RATE, PHASE1_Wan2CfncRate);
         assert.equal(initialized, true);
 
 
 
-        ret = await CFuncTokenInstance.init(PHASE1, PHASE1_ConTokenStartTime, PHASE1_ConTokenEndTime, PHASE1_CFunc2UM1SRatio);
+        ret = await CfncTokenInstance.init(PHASE1, PHASE1_ConTokenStartTime, PHASE1_ConTokenEndTime, PHASE1_Cfnc2UM1SRatio);
 
         assert.web3Event(ret, {
             event: 'FirstPhaseParameters',
             args: {
                 startTime: parseInt(PHASE1_ConTokenStartTime),
                 endTime: parseInt(PHASE1_ConTokenEndTime),
-                conRatio: PHASE1_CFunc2UM1SRatio
+                conRatio: PHASE1_Cfnc2UM1SRatio
             }
         });
 
@@ -132,13 +132,13 @@ contract('', async ([owner]) => {
         console.log(colors.green('gotMAX_EXCHANGE_MINT: ', gotMAX_EXCHANGE_MINT, MAX_EXCHANGE_MINT));
 
 
-        let gotConStartTime = await CFuncTokenInstance.conStartTime();
-        let gotConEndTime = await CFuncTokenInstance.conEndTime();
-        let gotConRatio = await CFuncTokenInstance.conRatio();
+        let gotConStartTime = await CfncTokenInstance.conStartTime();
+        let gotConEndTime = await CfncTokenInstance.conEndTime();
+        let gotConRatio = await CfncTokenInstance.conRatio();
 
         assert.equal(gotConStartTime, parseInt(PHASE1_ConTokenStartTime));
         assert.equal(gotConEndTime, parseInt(PHASE1_ConTokenEndTime));
-        assert.equal(gotConRatio, PHASE1_CFunc2UM1SRatio);
+        assert.equal(gotConRatio, PHASE1_Cfnc2UM1SRatio);
 
         assert.equal(gotMAX_EXCHANGE_MINT.toNumber(), web3.toWei(MAX_EXCHANGE_MINT));
 
@@ -152,11 +152,11 @@ contract('', async ([owner]) => {
     it('[40000100] buy token with api function in contract,should success,but only get 10 token and send back to rest wan', async () => {
 
 
-            var preTokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
+            var preTokens = await CfncTokenInstance.balanceOf(USER1_ADDRESS);
 
             var preBalance = await web3.eth.getBalance(WALLET_ADDRESS);
 
-            ret = await FinNexusContributionInstance.buyCFuncCoin(USER1_ADDRESS,
+            ret = await FinNexusContributionInstance.buyCfncCoin(USER1_ADDRESS,
                 {   from:USER1_ADDRESS,
                     value:web3.toWei(2*WAN_CONTRIBUTE_AMOUNT),
                     gas: 4700000,
@@ -165,7 +165,7 @@ contract('', async ([owner]) => {
 
             expectTokens = new BigNumber(WAN_CONTRIBUTE_AMOUNT).mul(ether);
 
-            gotTokens = await CFuncTokenInstance.balanceOf(USER1_ADDRESS);
+            gotTokens = await CfncTokenInstance.balanceOf(USER1_ADDRESS);
 
             console.log("function got tokens=",gotTokens.toNumber());
 
