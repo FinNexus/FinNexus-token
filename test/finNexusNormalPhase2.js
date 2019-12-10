@@ -104,7 +104,7 @@ contract('', async ([owner]) => {
 
       console.log(colors.green('gotMAX_EXCHANGE_MINT: ',gotMAX_EXCHANGE_MINT,MAX_EXCHANGE_MINT));
 
-      ret = await CfncTokenInstance.init(PHASE1,PHASE1_ConTokenStartTime,PHASE1_ConTokenEndTime,PHASE1_CFnc2UM1SRatio,{from:owner});
+      ret = await CfncTokenInstance.init(PHASE1,PHASE1_ConTokenStartTime,PHASE1_ConTokenEndTime,PHASE1_Cfnc2UM1SRatio,{from:owner});
       //console.log(ret)
 
       let gotConStartTime =  await CfncTokenInstance.conStartTime();
@@ -240,7 +240,7 @@ contract('', async ([owner]) => {
 
         console.log(colors.green('gotMAX_EXCHANGE_MINT: ',gotMAX_EXCHANGE_MINT,MAX_EXCHANGE_MINT_PHASE2));
 
-        let conEndTime =  await CFncTokenInstance.conEndTime();
+        let conEndTime =  await CfncTokenInstance.conEndTime();
 
         console.log(conEndTime.toNumber(),PHASE2_ConTokenStartTime,conEndTime.toNumber() < PHASE2_ConTokenStartTime );
 

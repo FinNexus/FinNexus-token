@@ -207,9 +207,9 @@ contract FinNexusContribution is Owned {
             /// Reserve tokens according FinNexus ICO rules
         	uint stakeMultiplier = CFNC_TOTAL_SUPPLY.div(DIVISOR);
     		/// mint tokens for dirrent holder
-            CFncTokenInterface(cfncTokenAddress).mintToken(DEV_TEAM_HOLDER, DEV_TEAM_STAKE.mul(stakeMultiplier));
-            CFncTokenInterface(cfncTokenAddress).mintToken(FOUNDATION_HOLDER, FOUNDATION_STAKE.mul(stakeMultiplier));
-            CFncTokenInterface(cfncTokenAddress).mintToken(DYNAMIC_HOLDER, DYNAMIC_STAKE.mul(stakeMultiplier));
+            CfncTokenInterface(cfncTokenAddress).mintToken(DEV_TEAM_HOLDER, DEV_TEAM_STAKE.mul(stakeMultiplier));
+            CfncTokenInterface(cfncTokenAddress).mintToken(FOUNDATION_HOLDER, FOUNDATION_STAKE.mul(stakeMultiplier));
+            CfncTokenInterface(cfncTokenAddress).mintToken(DYNAMIC_HOLDER, DYNAMIC_STAKE.mul(stakeMultiplier));
 
             MAX_OPEN_SOLD = FIRST_OPEN_SALE_AMOUNT.mul(_wanRatioOfSold).div(DIVISOR);
             MAX_EXCHANGE_MINT = FIRST_OPEN_SALE_AMOUNT.sub(MAX_OPEN_SOLD);
@@ -219,7 +219,7 @@ contract FinNexusContribution is Owned {
         } else {
 
             require(_phase == 2);
-            require(_startTime > CFncTokenInterface(cfncTokenAddress).conEndTime());
+            require(_startTime > CfncTokenInterface(cfncTokenAddress).conEndTime());
 
             MAX_OPEN_SOLD = SECOND_OPEN_SALE_AMOUNT.mul(_wanRatioOfSold).div(DIVISOR);
             MAX_EXCHANGE_MINT = SECOND_OPEN_SALE_AMOUNT.sub(MAX_OPEN_SOLD);
@@ -253,10 +253,10 @@ contract FinNexusContribution is Owned {
         uint availToken = MAX_EXCHANGE_MINT.sub(mintExchangeTokens);
         if (availToken >= _amount) {
             mintExchangeTokens = mintExchangeTokens.add(_amount);
-            CFncTokenInterface(cfncTokenAddress).mintToken(_exchangeAddr, _amount);
+            CfncTokenInterface(cfncTokenAddress).mintToken(_exchangeAddr, _amount);
             emit MintExchangeSale(_exchangeAddr,_amount);
         } else {
-            CFncTokenInterface(cfncTokenAddress).mintToken(_exchangeAddr,availToken);
+            CfncTokenInterface(cfncTokenAddress).mintToken(_exchangeAddr,availToken);
             emit MintExchangeSale(_exchangeAddr,availToken);
         }
     }
@@ -278,7 +278,7 @@ contract FinNexusContribution is Owned {
      * @param _receipient the address for recieving cfnc tokens
      *
      */
-    function buyCFncCoin(address _receipient)
+    function buyCfncCoin(address _receipient)
         public
         payable
         notHalted
@@ -359,7 +359,7 @@ contract FinNexusContribution is Owned {
 
         if(toFund > 0) {
 
-            CFncTokenInterface(cfncTokenAddress).mintToken(receipient, tokenCollect);
+            CfncTokenInterface(cfncTokenAddress).mintToken(receipient, tokenCollect);
             openSoldTokens = openSoldTokens.add(tokenCollect);
 
             //transfer wan to specified address
