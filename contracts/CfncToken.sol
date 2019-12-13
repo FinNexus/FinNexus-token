@@ -57,6 +57,7 @@ contract CfncToken is StandardToken {
 
     uint public totalSupply;
     uint public totalCfnc2UM1S;
+    uint public totalMinted;
 
     /// the firs data for save
     uint public firstPhaseCfnc2UM1S;
@@ -142,7 +143,7 @@ contract CfncToken is StandardToken {
           firstPhaseCfnc2UM1S = totalCfnc2UM1S;
           totalCfnc2UM1S = 0;
 
-          firstPhaseTotalSupply = totalSupply;
+          firstPhaseTotalSupply = totalMinted;
 
           emit SecondPhaseParameters(_conStartTime,_conEndTime,_conRatio);
 
@@ -167,6 +168,7 @@ contract CfncToken is StandardToken {
         //check parameter in ico minter contract
       	balances[_receipent] = balances[_receipent].add(_amount);
       	totalSupply = totalSupply.add(_amount);
+      	totalMinted = totalMinted.add(_amount);
     }
 
 
@@ -186,7 +188,7 @@ contract CfncToken is StandardToken {
         require(balances[msg.sender] >= _value);
 
         //cal quota for convert in current phase,cal it here because we do not know totalSupply until now possible,80% is allowed to convert
-        uint convertQuota  = totalSupply.sub(firstPhaseTotalSupply).mul(conRatio).div(DIVISOR);
+        uint convertQuota  = totalMinted.sub(firstPhaseTotalSupply).mul(conRatio).div(DIVISOR);
 
         //totalCfnc2UM1S is accumulator for current phase
         uint availble = convertQuota.sub(_value).sub(totalCfnc2UM1S);
@@ -198,6 +200,7 @@ contract CfncToken is StandardToken {
         totalCfnc2UM1S = totalCfnc2UM1S.add(_value);
 
         um1sToken.mintToken(msg.sender, _value);
+        totalSupply = totalSupply.sub(_value);
 
         emit ConvertCfnc2UM1S(msg.sender,_value);
 
@@ -219,7 +222,6 @@ contract CfncToken is StandardToken {
         name = _name;
         symbol = _symbol;
     }
-
 
 }
 

@@ -2,7 +2,7 @@ pragma solidity ^0.4.24;
 
 /*
 
-  Copyright 2017 FinNexus Foundation.
+  Copyright 2019 FinNexus Foundation.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -325,6 +325,39 @@ contract FinNexusContribution is Owned {
         require(_Wan2CfncRate != 0);
         WAN_CFNC_RATE =  _Wan2CfncRate;
     }
+
+    /**
+     * public function
+     *
+     * @dev change exchange quota
+     * @param _quota the exchange rate
+     * @param _add exchange quota direction,increase or decrease
+     */
+    function changeExchangeQuota(uint _quota,bool _add) public onlyOwner{
+        require(_quota != 0);
+
+        if (_add) {
+            uint tokenAvailable = MAX_OPEN_SOLD.sub(openSoldTokens);
+            if (tokenAvailable > _quota) {
+                MAX_OPEN_SOLD = MAX_OPEN_SOLD.sub(_quota);
+                MAX_EXCHANGE_MINT = MAX_EXCHANGE_MINT.add(_quota);
+            } else {
+                MAX_OPEN_SOLD = MAX_OPEN_SOLD.sub(tokenAvailable);
+                MAX_EXCHANGE_MINT = MAX_EXCHANGE_MINT.add(tokenAvailable);
+            }
+        } else {
+            tokenAvailable = MAX_EXCHANGE_MINT.sub(mintExchangeTokens);
+            if (tokenAvailable > _quota) {
+                MAX_OPEN_SOLD = MAX_OPEN_SOLD.add(_quota);
+                MAX_EXCHANGE_MINT = MAX_EXCHANGE_MINT.sub(_quota);
+            } else {
+                MAX_OPEN_SOLD = MAX_OPEN_SOLD.add(tokenAvailable);
+                MAX_EXCHANGE_MINT = MAX_EXCHANGE_MINT.sub(tokenAvailable);
+            }
+        }
+
+    }
+
 
     /**
      * public function
