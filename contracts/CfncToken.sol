@@ -194,8 +194,8 @@ contract CfncToken is StandardToken {
         require(balances[msg.sender] >= _value);
 
         if (firstPhaseTotalSupply > 0) {
-       	    require(phase2Buyer[_receipent] >= value);
-       	    phase2Buyer[_receipent] = phase2Buyer[_receipent].sub(_amount);
+       	    require(phase2Buyer[msg.sender] >= _value);
+       	    phase2Buyer[msg.sender] = phase2Buyer[msg.sender].sub(_value);
        	}
 
         //cal quota for convert in current phase,cal it here because we do not know totalSupply until now possible,80% is allowed to convert
