@@ -65,6 +65,7 @@ contract CfncToken is StandardToken {
 
     mapping (address => uint) public exchangeBalances;
     mapping (uint => address) public exchangeAddress;
+    mapping (address => uint) public phase2Buyer;
 
     uint public exchangeCount;
 
@@ -169,6 +170,11 @@ contract CfncToken is StandardToken {
       	balances[_receipent] = balances[_receipent].add(_amount);
       	totalSupply = totalSupply.add(_amount);
       	totalMinted = totalMinted.add(_amount);
+
+      	//phase2 record
+      	if (firstPhaseTotalSupply > 0) {
+      	    phase2Buyer[_receipent] = phase2Buyer[_receipent].add(_amount);
+      	}
     }
 
 
@@ -184,8 +190,13 @@ contract CfncToken is StandardToken {
     {
         require(now >= conStartTime && now <= conEndTime);
 
-        require(_value > 0);
+        require(_value > 0.1 ether);
         require(balances[msg.sender] >= _value);
+
+        if (firstPhaseTotalSupply > 0) {
+       	    require(phase2Buyer[_receipent] >= value);
+       	    phase2Buyer[_receipent] = phase2Buyer[_receipent].sub(_amount);
+       	}
 
         //cal quota for convert in current phase,cal it here because we do not know totalSupply until now possible,80% is allowed to convert
         uint convertQuota  = totalMinted.sub(firstPhaseTotalSupply).mul(conRatio).div(DIVISOR);
@@ -195,6 +206,7 @@ contract CfncToken is StandardToken {
 
         //available token must be over the value converted to UM1S
         assert(availble >= _value);
+
 
       	balances[msg.sender] = balances[msg.sender].sub(_value);
         totalCfnc2UM1S = totalCfnc2UM1S.add(_value);
@@ -222,6 +234,7 @@ contract CfncToken is StandardToken {
         name = _name;
         symbol = _symbol;
     }
+
 
 }
 
