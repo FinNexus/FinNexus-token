@@ -190,7 +190,7 @@ contract CfncToken is StandardToken {
     {
         require(now >= conStartTime && now <= conEndTime);
 
-        require(_value > 0.1 ether);
+        require(_value >= 0.1 ether);
         require(balances[msg.sender] >= _value);
 
         if (firstPhaseTotalSupply > 0) {
