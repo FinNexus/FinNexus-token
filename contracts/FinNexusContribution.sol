@@ -251,6 +251,8 @@ contract FinNexusContribution is Owned {
         onlyWallet
     {
         uint availToken = MAX_EXCHANGE_MINT.sub(mintExchangeTokens);
+        assert(availToken > 0);
+
         if (availToken >= _amount) {
             mintExchangeTokens = mintExchangeTokens.add(_amount);
             CfncTokenInterface(cfncTokenAddress).mintToken(_exchangeAddr, _amount);
