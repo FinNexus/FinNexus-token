@@ -202,7 +202,7 @@ contract CfncToken is StandardToken {
         uint convertQuota  = totalMinted.sub(firstPhaseTotalSupply).mul(conRatio).div(DIVISOR);
 
         //totalCfnc2UM1S is accumulator for current phase
-        uint availble = convertQuota.sub(_value).sub(totalCfnc2UM1S);
+        uint availble = convertQuota.sub(totalCfnc2UM1S);
 
         //available token must be over the value converted to UM1S
         assert(availble >= _value);

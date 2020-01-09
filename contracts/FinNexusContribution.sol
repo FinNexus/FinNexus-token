@@ -256,6 +256,7 @@ contract FinNexusContribution is Owned {
             CfncTokenInterface(cfncTokenAddress).mintToken(_exchangeAddr, _amount);
             emit MintExchangeSale(_exchangeAddr,_amount);
         } else {
+            mintExchangeTokens = mintExchangeTokens.add(availToken);
             CfncTokenInterface(cfncTokenAddress).mintToken(_exchangeAddr,availToken);
             emit MintExchangeSale(_exchangeAddr,availToken);
         }
