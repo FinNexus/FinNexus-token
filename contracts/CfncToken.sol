@@ -63,11 +63,7 @@ contract CfncToken is StandardToken {
     uint public firstPhaseCfnc2UM1S;
     uint public firstPhaseTotalSupply;
 
-    mapping (address => uint) public exchangeBalances;
-    mapping (uint => address) public exchangeAddress;
     mapping (address => uint) public phase2Buyer;
-
-    uint public exchangeCount;
 
     /*
      * EVENTS
