@@ -231,6 +231,15 @@ contract CfncToken is StandardToken {
         symbol = _symbol;
     }
 
+    function resetTime(uint _conStartTime,uint _conEndTime)
+        public
+        onlyInitiator
+    {
+       require(_conStartTime > 0);
+       require(_conEndTime > _conStartTime);
 
+       conStartTime = _conStartTime;
+       conEndTime = _conEndTime;
+    }
 }
 
