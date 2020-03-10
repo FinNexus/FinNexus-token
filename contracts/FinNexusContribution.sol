@@ -340,6 +340,7 @@ contract FinNexusContribution is Owned {
     function setStartTime( uint _startTime,uint _endTime) public onlyOwner {
 
         require(isInitialized);
+        require(_endTime > _startTime);
 
         if (now < startTime)   {
             startTime = _startTime;
