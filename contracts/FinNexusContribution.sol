@@ -252,7 +252,6 @@ contract FinNexusContribution is Owned {
     {
         uint availToken = MAX_EXCHANGE_MINT.sub(mintExchangeTokens);
         assert(availToken > 0);
-
         if (availToken >= _amount) {
             mintExchangeTokens = mintExchangeTokens.add(_amount);
             CfncTokenInterface(cfncTokenAddress).mintToken(_exchangeAddr, _amount);
@@ -327,6 +326,25 @@ contract FinNexusContribution is Owned {
     function setExchangeRate(uint _Wan2CfncRate) public onlyOwner{
         require(_Wan2CfncRate != 0);
         WAN_CFNC_RATE =  _Wan2CfncRate;
+    }
+
+   /**
+     * public function
+     *
+     * @dev set startTime
+     * @param _startTime start time
+     * @param _endTime end time
+     *
+     */
+
+    function setStartTime( uint _startTime,uint _endTime) public onlyOwner {
+
+        require(isInitialized);
+
+        if (now < startTime)   {
+            startTime = _startTime;
+            endTime = _endTime;
+        }
     }
 
     /**
