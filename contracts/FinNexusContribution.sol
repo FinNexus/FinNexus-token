@@ -15,6 +15,8 @@ pragma solidity ^0.4.24;
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
+
+  Thanks to Noah for coming up with the FinNexus name! You can find him at https://github.com/noahniuwa
 */
 
 
