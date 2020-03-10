@@ -46,8 +46,8 @@ contract FinNexusContribution is Owned {
     /// ----------------------------------------------------------------------------------------------------
     uint public constant OPEN_SALE_STAKE = 300;
 
-    uint public constant FIRST_OPEN_SALE_AMOUNT = 80000000 ether;
-    uint public constant SECOND_OPEN_SALE_AMOUNT = 70000000 ether;
+    uint public constant FIRST_OPEN_SALE_AMOUNT = 50000000 ether;
+    uint public constant SECOND_OPEN_SALE_AMOUNT = 100000000 ether;
 
     // Reserved stakes
     uint public constant DEV_TEAM_STAKE = 250;   // 25%
