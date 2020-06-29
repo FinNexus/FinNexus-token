@@ -359,7 +359,7 @@ contract FinNexusContribution is Owned {
      */
     function changeExchangeQuota(uint _quota,bool _add) public onlyOwner{
         require(_quota != 0);
-
+        require(CURRENT_PHASE==1);
         if (_add) {
             uint tokenAvailable = MAX_OPEN_SOLD.sub(openSoldTokens);
             if (tokenAvailable > _quota) {
