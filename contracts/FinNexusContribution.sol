@@ -62,9 +62,10 @@ contract FinNexusContribution is Owned {
     uint public WAN_CFNC_RATE ;
 
     /// Addresses of Patrons
-    address public constant DEV_TEAM_HOLDER = 0xf851b2edae9d24876ed7645062331622e4f18a05;
-    address public constant FOUNDATION_HOLDER = 0x8ce3708fdbe05a75135e5923e8acc36d22d18033;
-    address public constant DYNAMIC_HOLDER = 0x414810cd259e89a63c6fb10326cfa00952fb4785;
+    address public constant DEV_TEAM_HOLDER = 0x490fbf44fbcdb0c19209ae013ac9174738e670c5;
+    address public constant FOUNDATION_HOLDER = 0x70197ee9981c3415404b47541155873d69d5c510;
+    address public constant DYNAMIC_HOLDER = 0xd5b5965754102660d9cce5bc57a7dc2a87e359d9;
+
 
         ///All deposited wan will be instantly forwarded to this address.
     address public walletAddress;
@@ -442,6 +443,11 @@ contract FinNexusContribution is Owned {
     		costValue = availableToken.mul(DIVISOR).div(WAN_CFNC_RATE);
     		getTokens = availableToken;
     	}
+    }
+
+    string public memo;
+    function inputComment(string _memo) public onlyOwner {
+        memo = _memo;
     }
 
 }
