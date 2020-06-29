@@ -37,7 +37,7 @@ contract CfncToken is StandardToken {
 
     uint   public constant decimals = 18;
 
-    string public constant Noah = "Thanks to Noah for coming up with the FinNexus name! You can find him at https://github.com/noahniuwa";
+    string public constant Noah = " Thanks to Noah for coming up with the FinNexus name! You can find him at https://github.com/noahniuwa";
  
 
     /// FinNexus total tokens supply
